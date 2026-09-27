@@ -1,0 +1,1 @@
+Metti qui i video opzionali: prologue.mp4, sync.mp4, fragments.mp4, riddles.mp4, lights.mp4, qrhunt.mp4, reconnect.mp4, simon.mp4, vault.mp4, dead.mp4, hint.mp4 (anche .webm). Vedi README.

@@ -11,6 +11,7 @@ const crypto = require('crypto');
 const express = require('express');
 const { WebSocketServer } = require('ws');
 const QRCode = require('qrcode');
+const fs = require('fs');
 const CONFIG = require('./config.json');
 const C = require('./lib/content');
 
@@ -32,6 +33,24 @@ const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toU
 const token = (n = 6) => crypto.randomBytes(n).toString('base64url').slice(0, n).toUpperCase().replace(/[^A-Z0-9]/g, 'X');
 const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const VICTIM = CONFIG.victim || CONFIG.birthday.name;
+// Video opzionali: public/media/<atto>.mp4 (o .webm) viene mostrato prima delle scene animate di quell'atto;
+// prologue.mp4 prima del prologo, hint.mp4 con ogni suggerimento, dead.mp4 allo scadere del tempo.
+function mediaFor(key) {
+  for (const ext of ['mp4', 'webm']) if (fs.existsSync(path.join(__dirname, 'public', 'media', `${key}.${ext}`))) return `/media/${key}.${ext}`;
+  return null;
+}
+function fillScene(sc) {
+  const out = { ...sc };
+  if (sc.text) out.text = fill(sc.text);
+  if (sc.title) out.title = fill(sc.title);
+  if (sc.chat) out.chat = sc.chat.map((t) => ({ text: fill(t) }));
+  return out;
+}
+function scenesFor(key, extra) {
+  const base = typeof C.SCENES[key] === 'function' ? C.SCENES[key](extra) : (C.SCENES[key] || []);
+  const video = mediaFor(key);
+  return (video ? [{ video }] : []).concat(base.map(fillScene));
+}
 function foodsList() {
   const foods = [...new Set(Object.values(S.players).map((p) => p.profile && p.profile.food).filter(Boolean))];
   return foods.length ? foods.join(', ') : 'i piatti della cena';
@@ -385,7 +404,9 @@ function publicView() {
   const lv = level();
   return {
     phase: S.phase, levelIdx: S.levelIdx, levelCount: C.LEVELS.length,
-    level: lv ? { id: lv.id, title: lv.title, subtitle: lv.subtitle } : null,
+    level: lv ? { id: lv.id, title: lv.title, subtitle: fill(lv.subtitle) } : null,
+    scenes: S.phase === 'intro' ? scenesFor('prologue') : S.phase === 'dead' ? scenesFor('dead') : lv ? scenesFor(lv.id) : [],
+    hintScenes: S.hint ? scenesFor('hint', S.hint.text) : null,
     players: Object.values(S.players).map((p) => ({ pid: p.pid, name: p.name, team: p.team, connected: p.connected })),
     teams: CONFIG.teams, birthday: CONFIG.birthday, victim: VICTIM,
     story: { title: fill(C.STORY.title), intro: C.STORY.intro.map(fill), win: C.STORY.win.map(fill), dead: C.STORY.dead.map(fill) },

@@ -3,6 +3,8 @@
   const { connect, esc, fragmentSvg } = NOVA;
   const $ = (id) => document.getElementById(id);
   let S = null, pid = localStorage.getItem('pid') || null, lastKey = '', lastToastAt = 0, clockSkew = 0, forceLobby = false;
+  let seenScene = null, seenHint = 0;
+  const cine = (scenes, opts) => NOVA.cine.play(scenes, opts).catch(() => {});
   const now = () => Date.now() + clockSkew;
   const vibrate = (p) => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
   function setPid(v) { pid = v; localStorage.setItem('pid', v); document.cookie = `pid=${v}; path=/; max-age=86400; SameSite=Lax`; }
@@ -52,8 +54,22 @@
     vault: () => S.L.me ? `<div class="bigmsg" style="color:var(--ok)">✔ Confermato</div><p class="muted" style="text-align:center">${S.L.confirmed.length}/${S.L.total} pronte. Forza!</p>` : `<p>Inserisci il codice a 3 cifre (fiala 1, fiala 2, fiala 3). Tutte dovete confermare entro 20 secondi dalla prima!</p>${input('code', '___')}<div class="keypad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<button data-k="${n}">${n}</button>`).join('')}<button data-k="del">⌫</button><button data-k="0">0</button><button class="go" data-k="go">OK</button></div>`
   };
 
+  function playScenes() {
+    if (!S || !S.me) return;
+    const key = S.phase === 'intro' ? 'intro' : S.phase === 'dead' ? 'dead:' + S.levelIdx : S.phase === 'level' ? 'level:' + S.levelIdx : null;
+    if (key && key !== seenScene) {
+      seenScene = key;
+      if (S.scenes && S.scenes.length) cine(S.scenes, { button: S.phase === 'intro' ? 'HO CAPITO' : S.phase === 'dead' ? 'OK' : 'INIZIA' });
+    }
+    if (S.hint && S.hint.at !== seenHint) {
+      const fresh = now() - S.hint.at < 60000;
+      seenHint = S.hint.at;
+      if (fresh && S.hintScenes) cine(S.hintScenes, { button: false });
+    }
+  }
   function render() {
     if (!S) return;
+    playScenes();
     $('lvl').textContent = S.level ? S.level.title : (S.phase === 'win' ? 'CASO RISOLTO' : S.phase === 'dead' ? 'TEMPO SCADUTO' : 'INDAGINE · TERMINALE');
     $('me').textContent = S.me ? S.me.name : '';
     const t = $('team'); if (S.me) { t.style.display = ''; t.style.setProperty('--tc', S.me.color); t.textContent = S.me.teamName; } else t.style.display = 'none';

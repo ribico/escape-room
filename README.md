@@ -46,6 +46,25 @@ alle ragazze di scrivere cose leggere, che sarebbero contente di sentir leggere 
 
 Al termine: coriandoli, il risveglio di Martina, tempo impiegato e suggerimenti usati.
 
+## Scene animate e video sui telefoni
+
+All'inizio di ogni atto, al prologo, allo scadere del tempo e a ogni suggerimento, i telefoni mostrano
+una breve scena a tutto schermo: disegni animati (elettrocardiogramma, biglietto strappato, fascicolo con
+timbro, quadro elettrico, fiale, prova fotografata, formula, lucchetto), testo che si scrive da solo,
+vibrazione, e i messaggi "in arrivo" dal Cuoco in stile chat con l'indicatore "sta scrivendo".
+Un tocco salta il testo, il pulsante finale (INIZIA / HO CAPITO) chiude la scena. Se arriva una scena nuova
+mentre una è ancora aperta, la nuova la sostituisce: nessuna resta indietro.
+
+Le scene sono in `lib/content.js` (`SCENES`): ogni voce ha `art` (nome del disegno in `public/cine.js`),
+`title`, `text`, `ms` (durata minima) e `buzz` (vibrazione). Le scene `chat` sono elenchi di messaggi.
+
+**Video opzionali.** Se vuoi filmati veri (per esempio un genitore mascherato che recita "Il Cuoco"),
+metti i file in `public/media/` con questi nomi: `prologue.mp4`, `sync.mp4`, `fragments.mp4`, `riddles.mp4`,
+`lights.mp4`, `qrhunt.mp4`, `reconnect.mp4`, `simon.mp4`, `vault.mp4`, `dead.mp4`, `hint.mp4` (anche `.webm`).
+Il video viene mostrato prima delle scene animate di quel momento, con un pulsante "GUARDA" (i browser dei
+telefoni non permettono l'avvio automatico con audio). Consigli: formato verticale o quadrato, 10-20 secondi,
+H.264 a risoluzione 720p o inferiore, così si carica in un attimo sulla rete di casa.
+
 ## Cosa serve
 
 - Un PC (Windows, macOS o Linux) con [Node.js](https://nodejs.org) 18 o superiore.
