@@ -20,13 +20,32 @@ const ADMIN_KEY = process.env.ADMIN_KEY || CONFIG.adminKey || String(1000 + Math
 const DURATION_MS = (CONFIG.durationMinutes || 60) * 60 * 1000;
 
 // ---------------------------------------------------------------- utilità
+// Elenca gli indirizzi IPv4 del PC, dal più probabile (Wi-Fi/Ethernet di casa) al meno probabile
+// (schede virtuali di Hyper-V, WSL, VirtualBox, VMware, Docker, VPN...).
+function lanCandidates() {
+  const VIRTUAL = /vEthernet|WSL|Hyper-V|VirtualBox|VMware|vmnet|docker|Tailscale|ZeroTier|Bluetooth|Loopback|tun|tap|Npcap/i;
+  const REAL = /Wi-?Fi|Wireless|WLAN|Ethernet|LAN|^eth|^wlan|^en\d|^wl/i;
+  const out = [];
+  for (const [name, ifaces] of Object.entries(os.networkInterfaces())) {
+    for (const i of ifaces) {
+      if (i.family !== 'IPv4' || i.internal) continue;
+      let score = 0;
+      if (VIRTUAL.test(name)) score -= 100;
+      if (REAL.test(name)) score += 20;
+      if (/^192\.168\./.test(i.address)) score += 10;
+      else if (/^10\./.test(i.address)) score += 5;
+      else if (/^172\.(1[6-9]|2\d|3[01])\./.test(i.address)) score -= 5;
+      if (/^169\.254\./.test(i.address)) score -= 50;
+      out.push({ name, address: i.address, score });
+    }
+  }
+  return out.sort((a, b) => b.score - a.score);
+}
 function lanIp() {
   if (process.env.HOST) return process.env.HOST;
   if (CONFIG.host) return CONFIG.host;
-  for (const ifaces of Object.values(os.networkInterfaces())) {
-    for (const i of ifaces) if (i.family === 'IPv4' && !i.internal) return i.address;
-  }
-  return 'localhost';
+  const c = lanCandidates();
+  return c.length ? c[0].address : 'localhost';
 }
 const BASE_URL = () => `http://${lanIp()}:${PORT}`;
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -565,4 +584,11 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`  Schermo   : ${BASE_URL()}/screen`);
   console.log(`  Regia     : ${BASE_URL()}/admin   (chiave: ${ADMIN_KEY})`);
   console.log(`  Stampa QR : ${BASE_URL()}/print?key=${ADMIN_KEY}\n`);
+  const c = lanCandidates();
+  if (c.length > 1 && !process.env.HOST && !CONFIG.host) {
+    console.log('  Questo PC ha più indirizzi di rete. Ho scelto il primo; se i telefoni non si collegano, avvia con');
+    console.log('  HOST=<indirizzo> npm start (Windows: set HOST=<indirizzo> && npm start) usando quello del Wi-Fi:');
+    c.forEach((x) => console.log(`    ${x.address.padEnd(15)}  ${x.name}`));
+    console.log('');
+  }
 });
