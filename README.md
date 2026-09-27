@@ -104,7 +104,7 @@ Il terminale stampa gli indirizzi da usare, per esempio:
       (frigorifero, sotto una sedia, specchio del bagno — modificabili in `config.json`).
 - [ ] **Controlla l'indirizzo stampato all'avvio.** Se il PC ha schede virtuali (Hyper-V, WSL, VirtualBox, VPN) il server
       potrebbe scegliere quella sbagliata (per esempio `172.21.x.x`): all'avvio elenca tutti gli indirizzi trovati. Usa quello
-      del Wi-Fi (di solito `192.168.x.x`, lo vedi con `ipconfig` su Windows) e avvia con `set HOST=192.168.1.25 && npm start`
+      del Wi-Fi (di solito `192.168.x.x`, lo vedi con `ipconfig` su Windows) e avvia con `set HOST=192.168.1.25` e poi `npm start`
       (Windows) o `HOST=192.168.1.25 npm start` (macOS/Linux), oppure scrivilo in `config.json` alla voce `host`.
 - [ ] **Assegna un IP fisso al PC** nel router (o stampa i QR il giorno stesso): i QR contengono l'indirizzo IP del PC.
       In alternativa, avvia con `HOST=192.168.1.20 npm start` per forzare l'indirizzo scritto nei QR.

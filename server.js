@@ -42,8 +42,9 @@ function lanCandidates() {
   return out.sort((a, b) => b.score - a.score);
 }
 function lanIp() {
-  if (process.env.HOST) return process.env.HOST;
-  if (CONFIG.host) return CONFIG.host;
+  // trim: su Windows "set HOST=1.2.3.4 && npm start" include lo spazio prima di && nel valore
+  if (process.env.HOST && process.env.HOST.trim()) return process.env.HOST.trim();
+  if (CONFIG.host && String(CONFIG.host).trim()) return String(CONFIG.host).trim();
   const c = lanCandidates();
   return c.length ? c[0].address : 'localhost';
 }
@@ -585,7 +586,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`  Regia     : ${BASE_URL()}/admin   (chiave: ${ADMIN_KEY})`);
   console.log(`  Stampa QR : ${BASE_URL()}/print?key=${ADMIN_KEY}\n`);
   const c = lanCandidates();
-  if (c.length > 1 && !process.env.HOST && !CONFIG.host) {
+  if (c.length > 1 && !(process.env.HOST || '').trim() && !String(CONFIG.host || '').trim()) {
     console.log('  Questo PC ha più indirizzi di rete. Ho scelto il primo; se i telefoni non si collegano, avvia con');
     console.log('  HOST=<indirizzo> npm start (Windows: set HOST=<indirizzo> && npm start) usando quello del Wi-Fi:');
     c.forEach((x) => console.log(`    ${x.address.padEnd(15)}  ${x.name}`));
