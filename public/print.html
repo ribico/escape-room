@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Indagine · Stampa QR</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body class="print">
+<div class="note">
+  <b>Prima di stampare:</b> i QR contengono l'indirizzo IP del PC (<span id="base" class="mono"></span>). Se il PC cambia indirizzo alla festa, i QR stampati non funzionano più:
+  assegna un IP fisso al PC nel router (o stampa il giorno stesso). Ogni foglio riporta anche un codice di riserva da digitare nella app.
+  <br><button class="noprint" onclick="print()" style="margin-top:8px">Stampa</button>
+</div>
+<div id="sheets"></div>
+<script>
+fetch('/api/info' + location.search).then((r) => r.json()).then((info) => {
+  document.getElementById('base').textContent = info.base;
+  const sheets = [];
+  sheets.push(`<div class="sheet"><h1>Compleanno di ${info.birthday.name}</h1><p>Inquadra per entrare nell'indagine</p><img src="/api/qr?text=${encodeURIComponent(info.joinUrl)}"><div class="code" style="letter-spacing:0;font-size:1.1rem">${info.joinUrl}</div></div>`);
+  (info.keys || []).forEach((k, i) => {
+    const url = `${info.base}/k/${k.code}`;
+    sheets.push(`<div class="sheet"><h1>🧪 FIALA ${i + 1}</h1><p>Il Cuoco l'aveva nascosta qui. Inquadra l'etichetta con la fotocamera.</p><img src="/api/qr?text=${encodeURIComponent(url)}"><p>Se il QR non funziona, digita nella app:</p><div class="code">${k.code}</div><p style="color:#888;font-size:.8rem;margin-top:16px">Per la regia: nascondi → ${k.hint}</p></div>`);
+  });
+  document.getElementById('sheets').innerHTML = sheets.join('');
+});
+</script>
+</body>
+</html>

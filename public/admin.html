@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Indagine · Regia</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body class="admin">
+<div id="login" class="card" style="max-width:420px;margin:40px auto">
+  <h2>Regia</h2><p class="muted">Inserisci la chiave stampata nel terminale del server.</p>
+  <input id="key" class="big" placeholder="CHIAVE"><button id="loginBtn" style="width:100%;margin-top:10px">ENTRA</button>
+</div>
+<div id="panel" class="hidden">
+  <div class="row" style="justify-content:space-between">
+    <h2 style="margin:0">Regia · Indagine</h2>
+    <div class="mono" id="timer" style="font-size:1.6rem"></div>
+  </div>
+  <div class="row" id="links" style="margin:8px 0"></div>
+  <div class="cols">
+    <div>
+      <div class="card">
+        <div id="phase" class="mono"></div>
+        <div class="btns" id="flow"></div>
+        <div class="btns">
+          <select id="gotoSel"></select><button id="gotoBtn" class="secondary">Vai al livello</button>
+        </div>
+        <h3>Suggerimenti</h3>
+        <div class="btns" id="hints"></div>
+        <div class="row"><input id="customHint" placeholder="suggerimento personalizzato"><button id="customHintBtn" class="secondary">Invia</button></div>
+        <h3 style="margin-top:14px">Tempo</h3>
+        <div class="btns"><button class="secondary" data-min="5">+5 min</button><button class="secondary" data-min="10">+10 min</button><button class="secondary" data-min="-5">−5 min</button></div>
+        <div id="cheat" class="cheat" style="margin-top:14px"></div>
+      </div>
+      <div class="card" style="margin-top:16px"><h3>Fiale nascoste (per te)</h3><div id="keys" class="cheat"></div></div>
+      <div class="card" style="margin-top:16px"><h3>Schede riservate</h3><p class="muted">Solo tu le vedi. Servono per aiutare nell'interrogatorio.</p><div id="profiles" class="cheat"></div></div>
+      <div class="card" style="margin-top:16px"><h3>Pericolo</h3><div class="btns"><button class="danger" id="resetBtn">Azzera partita (tieni giocatrici)</button><button class="danger" id="resetAllBtn">Azzera tutto</button><button class="secondary" id="winBtn">Forza vittoria</button></div></div>
+    </div>
+    <div>
+      <div class="card"><h3>Giocatrici</h3><table id="players"></table></div>
+      <div class="card" style="margin-top:16px"><h3>Registro</h3><div id="log" class="log"></div></div>
+    </div>
+  </div>
+</div>
+<script src="/common.js"></script>
+<script src="/admin.js"></script>
+</body>
+</html>

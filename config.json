@@ -1,0 +1,42 @@
+{
+  "port": 3000,
+  "host": "",
+  "adminKey": "",
+  "durationMinutes": 60,
+  "birthday": {
+    "name": "Martina",
+    "age": 15
+  },
+  "teams": [
+    {
+      "name": "NEON",
+      "color": "#ff2d95"
+    },
+    {
+      "name": "CYBER",
+      "color": "#19e6ff"
+    },
+    {
+      "name": "PIXEL",
+      "color": "#b7ff2a"
+    }
+  ],
+  "keys": [
+    {
+      "code": "7K3A",
+      "digit": "7",
+      "hint": "Dove si conservano le cose fredde (frigorifero)"
+    },
+    {
+      "code": "M2Q9",
+      "digit": "2",
+      "hint": "Sotto qualcosa su cui ci si siede (sedia o divano)"
+    },
+    {
+      "code": "Z5P4",
+      "digit": "5",
+      "hint": "Dove ci si guarda ogni mattina (specchio del bagno)"
+    }
+  ],
+  "victim": "Martina"
+}
