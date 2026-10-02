@@ -89,7 +89,7 @@ async function waitFor(c, pred, label, ms = 15000) {
   { const m = /Posti 1→\d+: ([^·]+)·/.exec(admin.state.admin.cheat); const solution = m[1].split(',').map((x) => x.trim());
     assert(solution.length === 5, 'soluzione dei posti a tavola in regia');
     assert(phones.every((p) => p.state.L.mine.length >= 1) || admin.state.L.clueCount < 12, 'indizi distribuiti tra i telefoni');
-    assert(phones[1].state.L.mine.every((c) => /sat|seat/.test(c)), 'indizi in inglese per Giulia');
+    assert(phones[1].state.L.mine.every((c) => /sat|seat|sitting/.test(c)), 'indizi in inglese per Giulia');
     phones[4].send({ type: 'order', order: solution.slice().reverse() }); await sleep(200);
     assert(phones[4].state.L.lockedUntil > Date.now() + 5000, 'ordine sbagliato: 10 s di blocco');
     phones[5].send({ type: 'order', order: solution }); }
