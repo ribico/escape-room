@@ -77,7 +77,7 @@ async function waitFor(c, pred, label, ms = 15000) {
   assert(phones.every((p) => p.state.L.mine.length === 1), 'un fascicolo per telefono');
   assert(phones.every((p) => answers[p.state.L.mine[0].idx] !== me(p).name), 'nessuna riceve il proprio fascicolo');
   assert(phones.some((p) => p.state.L.mine[0].q.includes('segreto ')), 'i fascicoli usano le schede');
-  assert(phones.some((p) => p.state.L.mine[0].q.includes('Non ha compilato la scheda')), 'fascicolo di riserva per chi non ha compilato');
+  assert(phones.some((p) => /Non ha compilato la scheda|did not fill in her card/.test(p.state.L.mine[0].q)), 'fascicolo di riserva per chi non ha compilato');
   { const p = phones.find((p) => answers[p.state.L.mine[0].idx] === 'Giulia'); p.send({ type: 'answer', idx: p.state.L.mine[0].idx, text: 'giuy' }); await waitFor(admin, (s) => s.L.identified.some((x) => x.name === 'Giulia'), 'accettato il soprannome al posto del nome'); }
   phones.forEach((p) => p.state.L.mine.forEach((r) => p.send({ type: 'answer', idx: r.idx, text: answers[r.idx] })));
   await waitFor(admin, (s) => s.L && s.L.allSolved, 'tutte le sospettate identificate');
@@ -85,11 +85,12 @@ async function waitFor(c, pred, label, ms = 15000) {
   phones[3].send({ type: 'password', text: 'contro veleno' });
   await waitFor(admin, (s) => s.phase === 'levelDone', 'parola d\'ordine CONTROVELENO accettata');
   admin.send({ type: 'next' }); await waitFor(admin, (s) => s.level && s.level.id === 'seating', 'livello seating');
+  await waitFor(phones[1], (s) => s.level && s.level.id === 'seating' && s.L && s.L.names, 'telefono di Giulia aggiornato');
   await sleep(300);
   { const m = /Posti 1→\d+: ([^·]+)·/.exec(admin.state.admin.cheat); const solution = m[1].split(',').map((x) => x.trim());
     assert(solution.length === 5, 'soluzione dei posti a tavola in regia');
     assert(phones.every((p) => p.state.L.mine.length >= 1) || admin.state.L.clueCount < 12, 'indizi distribuiti tra i telefoni');
-    assert(phones[1].state.L.mine.every((c) => /sat|seat|sitting/.test(c)), 'indizi in inglese per Giulia');
+    assert(phones[1].state.L.mine.every((c) => /sat|seat|sitting/.test(c)), 'indizi in inglese per Giulia: ' + JSON.stringify(phones[1].state.L.mine));
     phones[4].send({ type: 'order', order: solution.slice().reverse() }); await sleep(200);
     assert(phones[4].state.L.lockedUntil > Date.now() + 5000, 'ordine sbagliato: 10 s di blocco');
     phones[5].send({ type: 'order', order: solution }); }
