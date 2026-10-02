@@ -30,14 +30,10 @@
     $('gotoSel').innerHTML = A.levels.map((l, i) => `<option value="${i}" ${i === S.levelIdx ? 'selected' : ''}>${esc(l)}</option>`).join('');
     $('hints').innerHTML = A.hints.map((h, i) => btn(`💡 ${i + 1}: ${esc(h)}`, { type: 'hint', idx: i }, 'secondary')).join('') || '<span class="muted">nessun suggerimento in questa fase</span>';
     $('keys').innerHTML = A.keys.map((k, i) => `Fiala ${i + 1}: codice <b>${esc(k.code)}</b> → cifra <b>${esc(k.digit)}</b> · nascondila: ${esc(k.hint)}`).join('<br>');
-    $('profiles').innerHTML = A.profiles.map((p) => `<details><summary><b>${esc(p.name)}</b> ${p.profile ? '✔' : '<span class="muted">(scheda non compilata)</span>'}</summary>${p.profile ? S.profileFields.map((f) => p.profile[f.key] ? `<div><span class="muted">${esc(f.label)}</span><br>${esc(p.profile[f.key])}</div>` : '').join('') : ''}</details>`).join('');
-    let cheat = '';
-    if (A.riddleAnswers) cheat = '<b>Fascicoli:</b> ' + A.riddleAnswers.map((a, i) => `${i + 1}=${esc(a)}`).join(' · ') + ` · parola d'ordine: ${esc(A.riddlePassword)}`;
-    if (A.fragmentsAnswer) cheat = `<b>Comando:</b> ${esc(A.fragmentsAnswer)}`;
-    if (S.level && S.level.id === 'reconnect') cheat = `<b>Codice attuale:</b> ${esc(S.L.token)}`;
-    if (S.level && S.level.id === 'vault') cheat = `<b>Codice cassaforte:</b> ${A.keys.map((k) => k.digit).join('')}`;
+    $('profiles').innerHTML = A.profiles.map((p) => `<details><summary><b>${esc(p.name)}</b> ${p.lang === 'en' ? '🇬🇧' : '🇮🇹'} ${p.profile ? '✔' : '<span class="muted">(scheda non compilata)</span>'}</summary>${p.profile ? S.profileFields.map((f) => p.profile[f.key] ? `<div><span class="muted">${esc(f.label)}</span><br>${esc(p.profile[f.key])}</div>` : '').join('') : ''}</details>`).join('');
+    const cheat = A.cheat ? `<b>Soluzione:</b> ${esc(A.cheat)}` : '';
     $('cheat').innerHTML = cheat;
-    $('players').innerHTML = '<tr><th>Nome</th><th>Squadra</th><th>Stato</th><th></th></tr>' + S.players.map((p) => `<tr><td>${esc(p.name)}</td><td><select data-pid="${p.pid}" class="teamSel">${S.teams.map((t, i) => `<option value="${i}" ${i === p.team ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></td><td>${p.connected ? '🟢' : '⚫'}</td><td>${btn('✕', { type: 'kick', pid: p.pid }, 'secondary')}</td></tr>`).join('');
+    $('players').innerHTML = '<tr><th>Nome</th><th>Squadra</th><th>Stato</th><th></th></tr>' + S.players.map((p) => `<tr><td>${esc(p.name)} <span class="muted">${p.lang === 'en' ? '🇬🇧' : '🇮🇹'}</span></td><td><select data-pid="${p.pid}" class="teamSel">${S.teams.map((t, i) => `<option value="${i}" ${i === p.team ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></td><td>${p.connected ? '🟢' : '⚫'}</td><td>${btn('✕', { type: 'kick', pid: p.pid }, 'secondary')}</td></tr>`).join('');
     $('log').innerHTML = A.log.map((l) => `<div>${new Date(l.at).toLocaleTimeString('it-IT')} · ${esc(l.text)}</div>`).join('');
     document.querySelectorAll('[data-msg]').forEach((b) => { b.onclick = () => send(JSON.parse(b.dataset.msg)); });
     document.querySelectorAll('.teamSel').forEach((s) => { s.onchange = () => send({ type: 'setTeam', pid: s.dataset.pid, team: Number(s.value) }); });

@@ -15,6 +15,17 @@ può concedere minuti extra per riprendere. Se vincono, l'antidoto funziona e pa
 
 Il tono è "giallo da tavolo" (Cluedo), non horror: nessuna delle ragazze è il colpevole, il cattivo è un personaggio inventato.
 
+## Due lingue
+
+Alla registrazione ogni ragazza sceglie **Italiano** o **English**: tutto il suo telefono (istruzioni, scene,
+fascicoli, indizi, messaggi del Cuoco, pagine aperte dalla fotocamera) è nella lingua scelta, e può cambiarla
+dalla lobby. Lo **schermo grande** è condiviso e mostra sempre entrambe le lingue: italiano in grande, inglese
+subito sotto (titoli, istruzioni, storia, suggerimenti, avvisi). La lingua principale dello schermo si imposta
+con `screenLang` in `config.json` (`"it"` o `"en"`). La regia resta in italiano.
+
+Le schede riservate sono testo libero: una ragazza inglese scriverà le risposte in inglese e il suo fascicolo
+sarà letto da un'altra, magari italiana. Fa parte del gioco: si aiutano.
+
 ## La scheda riservata (personalizzazione)
 
 In lobby, dopo aver scritto il nome, ogni ragazza compila **sul proprio telefono** una scheda che
@@ -31,18 +42,24 @@ Il gioco usa le schede in due punti:
 Le schede restano in memoria sul PC e non escono dalla rete di casa. Suggerimento pratico: ricordate
 alle ragazze di scrivere cose leggere, che sarebbero contente di sentir leggere ad alta voce dalle altre.
 
-## Gli 8 atti (~55 minuti)
+## Gli 11 atti (60-75 minuti)
 
 | # | Atto | Meccanica | Dove si gioca |
 |---|------|-----------|---------------|
 | 1 | Stabilizzare il battito | Tutte devono tenere premuto il telefono nello stesso istante per 3 s | telefoni + anello di avanzamento sullo schermo |
 | 2 | Il biglietto strappato | Ogni squadra ha una parola divisa a strisce tra i suoi telefoni: vanno messi fianco a fianco nell'ordine giusto; le tre parole formano la frase ("CERCA TRE FIALE") | telefoni fisicamente affiancati |
-| 3 | L'interrogatorio | Fascicoli generati dalle schede riservate; ogni identificazione svela lettere della parola d'ordine (CONTROVELENO) | telefoni + schermo |
-| 4 | Il quadro elettrico | Griglia 4×3 "lights out": ogni telefono controlla un interruttore, premendo si invertono anche i vicini; obiettivo tutti accesi | telefoni + schermo in tempo reale |
-| 5 | Le tre fiale | Tre QR stampati e nascosti in casa; chi li inquadra scopre una cifra del codice finale | fotocamera dei telefoni + casa |
-| 6 | Le prove spariscono | Ognuna deve inquadrare il QR sullo schermo, che cambia ogni 25 s | fotocamera dei telefoni + schermo |
-| 7 | La formula dell'antidoto | Simon a squadre: lo schermo mostra una sequenza di colori, le squadre la ripetono col proprio pulsante (3 round) | schermo + telefoni |
-| 8 | La cassetta dei farmaci | Tutte devono inserire il codice a 3 cifre (le fiale dell'atto 5) entro 20 s dalla prima | telefoni |
+| 3 | Il messaggio cifrato | Lo schermo mostra una parola a simboli (BELLADONNA); ogni telefono conosce uno o due simboli della chiave; vanno messi insieme | schermo + telefoni |
+| 4 | L'interrogatorio | Fascicoli generati dalle schede riservate; ogni identificazione svela lettere della parola d'ordine (CONTROVELENO) | telefoni + schermo |
+| 5 | Chi sedeva dove | Puzzle logico: cinque nomi (presi dalle giocatrici) e cinque posti a tavola; ogni telefono ha un indizio ("X sedeva subito a sinistra di Y"); generato a caso con soluzione unica garantita | telefoni + schermo |
+| 6 | Il quadro elettrico | Griglia 4×3 "lights out": ogni telefono controlla un interruttore, premendo si invertono anche i vicini; obiettivo tutti accesi | telefoni + schermo in tempo reale |
+| 7 | Le tre fiale | Tre QR stampati e nascosti in casa; chi li inquadra scopre una cifra del codice finale | fotocamera dei telefoni + casa |
+| 8 | Le prove spariscono | Ognuna deve inquadrare il QR sullo schermo, che cambia ogni 25 s | fotocamera dei telefoni + schermo |
+| 9 | La formula dell'antidoto | Simon a squadre: lo schermo mostra una sequenza di colori, le squadre la ripetono col proprio pulsante (3 round) | schermo + telefoni |
+| 10 | La stanza giusta | Otto stanze; ogni telefono ha un indizio che ne esclude alcune; si vota e la porta si apre solo se votano TUTTE la stessa stanza giusta | telefoni + schermo |
+| 11 | La cassetta dei farmaci | Tutte devono inserire il codice a 3 cifre (le fiale dell'atto 7) entro 20 s dalla prima | telefoni |
+
+Se la serata va troppo per le lunghe, dalla regia si può saltare un atto con "Prossimo" o "Vai al livello";
+se va troppo veloce, "+5 min" e i suggerimenti con parsimonia.
 
 Al termine: coriandoli, il risveglio di Martina, tempo impiegato e suggerimenti usati.
 
@@ -52,8 +69,9 @@ All'inizio di ogni atto, al prologo, allo scadere del tempo e a ogni suggeriment
 una breve scena a tutto schermo: disegni animati (elettrocardiogramma, biglietto strappato, fascicolo con
 timbro, quadro elettrico, fiale, prova fotografata, formula, lucchetto), testo che si scrive da solo,
 vibrazione, e i messaggi "in arrivo" dal Cuoco in stile chat con l'indicatore "sta scrivendo".
-Un tocco salta il testo, il pulsante finale (INIZIA / HO CAPITO) chiude la scena. Se arriva una scena nuova
-mentre una è ancora aperta, la nuova la sostituisce: nessuna resta indietro.
+Il testo si scrive a velocità di lettura; finito il testo, la scena aspetta un tocco (al massimo 45 secondi),
+così ognuna legge con calma. Un tocco mentre il testo scorre lo completa subito; il pulsante finale
+(INIZIA / HO CAPITO) chiude la scena. Se arriva una scena nuova mentre una è ancora aperta, la nuova la sostituisce.
 
 Le scene sono in `lib/content.js` (`SCENES`): ogni voce ha `art` (nome del disegno in `public/cine.js`),
 `title`, `text`, `ms` (durata minima) e `buzz` (vibrazione). Le scene `chat` sono elenchi di messaggi.
@@ -120,8 +138,9 @@ Il terminale stampa gli indirizzi da usare, per esempio:
 Tutto è in due file:
 
 - `config.json`: nome e età della festeggiata, nome della vittima, durata, nomi/colori delle squadre, codici e cifre delle fiale, porta.
-- `lib/content.js`: testi della storia (prologo, vittoria, tempo scaduto), titoli/istruzioni/suggerimenti degli atti,
-  le domande della scheda riservata, il modello del fascicolo, la parola d'ordine e le parole del biglietto strappato.
+- `lib/content.js`: tutti i testi in due lingue (`L('italiano', 'english')`): storia, titoli/istruzioni/suggerimenti degli atti,
+  domande della scheda riservata, fascicolo, parola d'ordine, parole del biglietto strappato, parola cifrata, stanze e
+  indizi, scene animate.
 
 Funziona anche con un numero diverso di giocatrici (da 3 in su) e di squadre (2-4): fascicoli e interruttori
 vengono distribuiti automaticamente tra chi è connessa.

@@ -3,6 +3,8 @@
 (function () {
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  // Attesa che termina subito se la scena viene interrotta da una nuova.
+  async function wait(ms, ctl) { const t0 = Date.now(); while (Date.now() - t0 < ms && !(ctl && ctl.aborted)) await sleep(Math.min(80, ms)); }
   const vibrate = (p) => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
 
   // ---- disegni animati (viewBox 200x200)
@@ -16,14 +18,17 @@
     camera: () => `<svg viewBox="0 0 200 200" class="art"><rect class="flash" x="0" y="0" width="200" height="200" fill="#fff"/><g class="polaroid"><rect x="50" y="40" width="100" height="120" fill="#fff"/><rect class="photo" x="58" y="48" width="84" height="84" fill="#333"/><text x="100" y="150" text-anchor="middle" font-size="9" fill="#333">PROVA N.1</text></g><g class="eraser"><rect x="30" y="90" width="140" height="30" fill="#ff4b4b" opacity=".8"/><text x="100" y="110" text-anchor="middle" font-size="12" fill="#fff" font-weight="900">CANCELLAZIONE...</text></g></svg>`,
     formula: () => `<svg viewBox="0 0 200 200" class="art"><path d="M70 40 L70 100 L45 160 L155 160 L130 100 L130 40 Z" fill="none" stroke="#fff" stroke-width="3"/>${['#ff2d95', '#19e6ff', '#b7ff2a'].map((c, i) => `<circle class="drop d${i}" cx="${80 + i * 20}" cy="10" r="7" fill="${c}"/>`).join('')}<path class="mix" d="M52 150 L148 150 L138 120 L62 120 Z" fill="#b7ff2a"/></svg>`,
     lock: () => `<svg viewBox="0 0 200 200" class="art"><path class="shackle" d="M70 90 V60 a30 30 0 0 1 60 0 V90" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/><rect x="50" y="90" width="100" height="80" rx="12" fill="#ff2d95"/>${[0, 1, 2].map((i) => `<circle class="pin p${i}" cx="${80 + i * 20}" cy="130" r="8" fill="#fff"/>`).join('')}</svg>`,
+    cipher: () => `<svg viewBox="0 0 200 200" class="art">${['★', '◆', '●', '▲', '♠'].map((s, i) => `<text class="symb s${i}" x="${30 + i * 36}" y="${90 + (i % 2) * 30}" text-anchor="middle" font-size="30" fill="${['#ff2d95', '#19e6ff', '#b7ff2a', '#ffd23f', '#fff'][i]}">${s}</text>`).join('')}<text x="100" y="160" text-anchor="middle" font-size="16" fill="#9a94b8" font-family="monospace">? ? ? ? ?</text></svg>`,
+    chairs: () => `<svg viewBox="0 0 200 200" class="art"><rect x="20" y="95" width="160" height="14" rx="7" fill="#c9a227"/>${[0, 1, 2, 3, 4].map((i) => `<g class="chair c${i}"><rect x="${30 + i * 32}" y="60" width="20" height="30" rx="4" fill="#f3f0ff"/><text x="${40 + i * 32}" y="80" text-anchor="middle" font-size="14" font-weight="800" fill="#07060f">?</text></g>`).join('')}</svg>`,
+    map: () => `<svg viewBox="0 0 200 200" class="art">${[[20, 30], [105, 30], [20, 100], [105, 100]].map(([x, y], i) => `<rect class="room r${i}" x="${x}" y="${y}" width="75" height="60" rx="6" fill="none" stroke="#19e6ff" stroke-width="3"/>`).join('')}<circle class="pin" cx="142" cy="130" r="9" fill="#ff2d95"/><text x="100" y="185" text-anchor="middle" font-size="12" fill="#9a94b8" font-family="monospace">?</text></svg>`,
     skull: () => `<svg viewBox="0 0 200 200" class="art"><g class="pulse"><circle cx="100" cy="90" r="45" fill="#f3f0ff"/><circle cx="82" cy="85" r="10" fill="#07060f"/><circle cx="118" cy="85" r="10" fill="#07060f"/><path d="M95 105 L100 115 L105 105 Z" fill="#07060f"/><rect x="78" y="128" width="44" height="18" rx="4" fill="#f3f0ff"/>${[0, 1, 2, 3].map((i) => `<line x1="${86 + i * 10}" y1="128" x2="${86 + i * 10}" y2="146" stroke="#07060f" stroke-width="2"/>`).join('')}</g></svg>`
   };
 
-  function typewriter(el, text, ctl, cps = 45) {
+  function typewriter(el, text, ctl, cps = 26) {
     return new Promise((res) => {
       let i = 0; el.textContent = '';
-      const t = setInterval(() => { if (ctl.aborted) { clearInterval(t); return res(); } el.textContent = text.slice(0, ++i); if (i >= text.length) { clearInterval(t); res(); } }, 1000 / cps);
-      el._stop = () => { clearInterval(t); el.textContent = text; res(); };
+      const t = setInterval(() => { if (ctl.aborted) { clearInterval(t); el._stop = null; return res(); } el.textContent = text.slice(0, ++i); if (i >= text.length) { clearInterval(t); el._stop = null; res(); } }, 1000 / cps);
+      el._stop = () => { clearInterval(t); el.textContent = text; el._stop = null; res(); };
     });
   }
   // Una sola scena alla volta: una nuova richiesta interrompe quella in corso (vince lo stato più recente).
@@ -34,6 +39,8 @@
     if (!scenes || !scenes.length) return;
     if (current) current.abort();
     const ctl = { aborted: false, onAbort: null, abort() { this.aborted = true; if (this.onAbort) this.onAbort(); } };
+    const tap = opts.lang === 'en' ? 'tap to continue' : 'tocca per continuare';
+    const MAX_WAIT = 45000;
     current = ctl;
     const ov = document.createElement('div'); ov.className = 'cine'; document.body.appendChild(ov);
     let skip = false;
@@ -41,38 +48,42 @@
     for (const sc of scenes) {
       if (ctl.aborted) break;
       skip = false;
-      if (sc.video) { await playVideo(ov, sc, ctl); continue; }
-      if (sc.chat) { await playChat(ov, sc, ctl); continue; }
-      ov.innerHTML = `<div class="scene">${sc.art && ART[sc.art] ? ART[sc.art]() : ''}<h2 class="ctitle">${esc(sc.title || '')}</h2><p class="tw"></p><div class="ctap">tocca per continuare</div></div>`;
+      if (sc.video) { await playVideo(ov, sc, ctl, opts); continue; }
+      if (sc.chat) { await playChat(ov, sc, ctl, opts, tap); continue; }
+      ov.innerHTML = `<div class="scene">${sc.art && ART[sc.art] ? ART[sc.art]() : ''}<h2 class="ctitle">${esc(sc.title || '')}</h2><p class="tw"></p><div class="ctap">${tap}</div></div>`;
       if (sc.buzz) vibrate(sc.buzz);
       await typewriter(ov.querySelector('.tw'), sc.text || '', ctl);
-      const t0 = Date.now(); while (!skip && !ctl.aborted && Date.now() - t0 < (sc.ms || 2500)) await sleep(80);
+      // Dopo il testo si aspetta un tocco (al massimo MAX_WAIT), così ognuna legge con calma.
+      const t0 = Date.now(); while (!skip && !ctl.aborted && Date.now() - t0 < MAX_WAIT) await sleep(80);
     }
     if (opts.button !== false && !ctl.aborted) {
       const s = ov.querySelector('.scene'); const tap = s && s.querySelector('.ctap');
       if (tap) { tap.outerHTML = `<button class="cbtn">${esc(opts.button || 'INIZIA')}</button>`; await new Promise((r) => { ov.querySelector('.cbtn').addEventListener('click', r); ctl.onAbort = r; }); }
     }
     if (current === ctl) current = null;
-    ov.classList.add('out'); await sleep(350); ov.remove();
+    ov.classList.add('out'); await sleep(ctl.aborted ? 120 : 350); ov.remove();
   }
 
   // Messaggi in arrivo, stile chat, con "sta scrivendo..."
-  async function playChat(ov, sc, ctl) {
-    ov.innerHTML = `<div class="scene chat"><div class="chead"><span class="avatar">🧑‍🍳</span><div><b>${esc(sc.from || 'IL CUOCO')}</b><div class="muted small">numero sconosciuto</div></div></div><div class="msgs"></div><div class="ctap">tocca per continuare</div></div>`;
+  async function playChat(ov, sc, ctl, opts, tap) {
+    const en = opts.lang === 'en';
+    ov.innerHTML = `<div class="scene chat"><div class="chead"><span class="avatar">🧑‍🍳</span><div><b>${esc(sc.from || (en ? 'THE COOK' : 'IL CUOCO'))}</b><div class="muted small">${en ? 'unknown number' : 'numero sconosciuto'}</div></div></div><div class="msgs"></div><div class="ctap">${tap}</div></div>`;
     const box = ov.querySelector('.msgs');
     for (const m of sc.chat) {
       if (ctl.aborted) return;
       const typing = document.createElement('div'); typing.className = 'bubble typing'; typing.innerHTML = '<span></span><span></span><span></span>'; box.appendChild(typing); box.scrollTop = box.scrollHeight;
-      await sleep(Math.min(2200, 500 + m.text.length * 25));
+      await wait(Math.min(2600, 700 + m.text.length * 30), ctl);
+      if (ctl.aborted) return;
       typing.className = 'bubble'; typing.textContent = m.text; vibrate([60]); box.scrollTop = box.scrollHeight;
-      await sleep(600);
+      // Tempo di lettura proporzionale alla lunghezza del messaggio.
+      await wait(Math.min(5000, 900 + m.text.length * 45), ctl);
     }
     const t0 = Date.now(); let done = false; ov.addEventListener('click', () => (done = true), { once: true });
-    while (!done && !ctl.aborted && Date.now() - t0 < (sc.ms || 3000)) await sleep(80);
+    while (!done && !ctl.aborted && Date.now() - t0 < 45000) await sleep(80);
   }
 
-  async function playVideo(ov, sc, ctl) {
-    ov.innerHTML = `<div class="scene"><video class="cvideo" src="${esc(sc.video)}" playsinline preload="auto"></video><button class="cbtn">▶ GUARDA</button></div>`;
+  async function playVideo(ov, sc, ctl, opts) {
+    ov.innerHTML = `<div class="scene"><video class="cvideo" src="${esc(sc.video)}" playsinline preload="auto"></video><button class="cbtn">▶ ${opts.lang === 'en' ? 'WATCH' : 'GUARDA'}</button></div>`;
     const v = ov.querySelector('video'); const b = ov.querySelector('.cbtn');
     await new Promise((res) => { ctl.onAbort = res; b.onclick = () => { b.remove(); v.play().catch(() => res()); v.onended = res; v.onerror = res; ov.querySelector('.scene').addEventListener('click', () => { v.pause(); res(); }, { once: true }); }; });
   }

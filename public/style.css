@@ -42,9 +42,12 @@ body.screen { height: 100vh; overflow: hidden; display: flex; flex-direction: co
 .screen .topbar { display: flex; justify-content: space-between; align-items: center; padding: 14px 28px; border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 1.1rem; }
 .screen .timer { font-size: 2.4rem; font-weight: 800; letter-spacing: .08em; }
 .screen .timer.warn { color: var(--bad); animation: pulse 1s infinite; }
-.screen main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 40px; text-align: center; gap: 18px; }
+.screen main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px 40px; text-align: center; gap: 14px; overflow: hidden; }
 .screen h1.title { font-size: clamp(2rem, 5vw, 4.2rem); }
-.screen .subtitle { font-size: clamp(1rem, 1.9vw, 1.6rem); max-width: 1100px; color: #d9d4f2; line-height: 1.4; }
+.screen .subtitle { font-size: clamp(1rem, 1.9vw, 1.6rem); max-width: 1100px; color: #d9d4f2; line-height: 1.4; margin: 0; }
+.screen .subtitle.alt { color: var(--muted); font-size: clamp(.9rem, 1.5vw, 1.25rem); margin-top: -6px; }
+.screen .title2 { font-family: var(--mono); color: var(--accent2); font-size: clamp(1rem, 1.8vw, 1.5rem); margin-top: -10px; letter-spacing: .05em; }
+.screen .subtitle .alt, .screen .hintbox .muted { font-size: .9em; }
 .screen .qr { width: min(42vh, 380px); height: auto; background: #fff; padding: 12px; border-radius: 16px; box-shadow: 0 0 60px rgba(25,230,255,.35); }
 .screen .url { font-family: var(--mono); font-size: clamp(1.2rem, 2.4vw, 2rem); color: var(--accent2); }
 .teams { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; width: 100%; }
@@ -196,3 +199,33 @@ body.print { background: #fff; color: #000; padding: 20px; font-family: var(--sa
 @keyframes heartbeat { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.04); } 45% { transform: scale(1); } 60% { transform: scale(1.06); } }
 .cellbtn:active, .keypad button:active { transform: scale(.96); }
 .riddle { animation: popin .35s; }
+
+/* ---------- lingua, atti nuovi ---------- */
+.langs { display: grid; gap: 12px; margin-top: 10px; }
+.langs button { width: 100%; font-size: 1.3rem; padding: 1em; }
+.keyparts { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 14px 0; }
+.keypart { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-radius: 16px; background: #15122b; border: 2px solid var(--accent2); font-size: 2.2rem; font-weight: 800; }
+.keypart .sym { color: var(--accent2); } .keypart .eq { color: var(--muted); font-size: 1.4rem; } .keypart .let { color: var(--ok); font-family: var(--mono); }
+.seats { display: flex; gap: 6px; margin: 10px 0; }
+.seat { flex: 1; min-width: 0; text-align: center; border: 2px dashed var(--border); border-radius: 12px; padding: 8px 2px; }
+.seat small { display: block; color: var(--muted); font-size: .65rem; } .seat b { display: block; font-size: .85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seat.filled { border-style: solid; border-color: var(--ok); }
+.namepick { display: flex; flex-wrap: wrap; gap: 8px; }
+.namepick button { flex: 1 1 40%; }
+.roomgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+.roomgrid .roomBtn { padding: 18px 8px; font-size: 1rem; text-align: center; }
+.roomgrid .roomBtn.sel { background: var(--ok); color: #000; border-color: var(--ok); }
+.cipherbig { font-size: clamp(2.2rem, 6vw, 5rem); letter-spacing: .25em; color: var(--accent2); font-weight: 800; text-shadow: 0 0 30px rgba(25,230,255,.5); }
+.table { display: flex; gap: 14px; justify-content: center; }
+.table .chairbox { width: clamp(90px, 12vw, 160px); padding: 14px 8px; border-radius: 14px; border: 2px dashed var(--border); text-align: center; font-size: clamp(1rem, 2vw, 1.6rem); font-weight: 800; }
+.table .chairbox small { display: block; color: var(--muted); font-size: .8rem; font-weight: 400; }
+.house { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: min(85vw, 900px); }
+.house .hr { padding: 14px 8px; border-radius: 14px; border: 2px solid var(--border); background: #15122b; text-align: center; font-weight: 800; font-size: clamp(.9rem, 1.6vw, 1.3rem); }
+.house .hr small { display: block; color: var(--muted); font-weight: 400; font-size: .8rem; }
+.house .hr .cnt { display: inline-block; margin-top: 6px; padding: .1em .6em; border-radius: 999px; background: var(--accent); color: #fff; font-size: .9rem; }
+.symb { animation: pulse 2s infinite; transform-origin: center; } .symb.s1 { animation-delay: .4s; } .symb.s2 { animation-delay: .8s; } .symb.s3 { animation-delay: 1.2s; } .symb.s4 { animation-delay: 1.6s; }
+.chair { animation: swapchair 2.4s ease-in-out infinite alternate; } .chair.c1, .chair.c3 { animation-direction: alternate-reverse; }
+@keyframes swapchair { from { transform: translateX(0); } to { transform: translateX(32px); } }
+.art .room { animation: roomglow 2.4s infinite; } .art .room.r1 { animation-delay: .6s; } .art .room.r2 { animation-delay: 1.2s; } .art .room.r3 { animation-delay: 1.8s; }
+@keyframes roomglow { 0%, 100% { fill: none; } 50% { fill: rgba(25,230,255,.25); } }
+.art .pin { animation: pulse 1s infinite; transform-origin: 142px 130px; }

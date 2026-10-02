@@ -28,7 +28,7 @@ async function waitFor(c, pred, label, ms = 15000) {
   await sleep(200); admin.send({ type: 'reset', dropPlayers: true });
   const phones = NAMES.map(() => client('phone', { pid: null }));
   await Promise.all(phones.map((p) => p.open));
-  phones.forEach((p, i) => p.send({ type: 'join', name: NAMES[i] }));
+  phones.forEach((p, i) => p.send({ type: 'join', name: NAMES[i], lang: i === 1 ? 'en' : 'it' }));
   await waitFor(admin, (s) => s.players.length === 12, 'lobby: 12 giocatrici entrate');
   const teamsCount = [0, 1, 2].map((t) => admin.state.players.filter((p) => p.team === t).length);
   assert(teamsCount.every((n) => n === 4), `squadre bilanciate 4/4/4 (${teamsCount})`);
@@ -40,7 +40,10 @@ async function waitFor(c, pred, label, ms = 15000) {
   assert(admin.state.admin.profiles.filter((p) => p.profile).length === 11, 'la regia vede le schede');
   assert(!phones[0].state.players || !JSON.stringify(phones[0].state).includes('segreto 3'), 'un telefono non vede le schede delle altre');
 
+  const screen = client('screen'); await screen.open; await sleep(300);
   admin.send({ type: 'start' }); await waitFor(admin, (s) => s.phase === 'intro', 'intro');
+  assert(phones[1].state.story.title.includes('POISONED') && phones[0].state.story.title.includes('AVVELENATO'), 'storia in inglese per Giulia, in italiano per Martina');
+  assert(screen.state.alt && screen.state.alt.story.title.includes('POISONED'), 'lo schermo riceve anche la seconda lingua');
   assert(admin.state.story.intro[3].includes('pizza') && admin.state.story.intro[3].includes('sushi'), 'la storia elenca i piatti delle schede');
   admin.send({ type: 'firstLevel' }); await waitFor(admin, (s) => s.level && s.level.id === 'sync', 'livello sync');
 
@@ -58,11 +61,19 @@ async function waitFor(c, pred, label, ms = 15000) {
   assert(phones[0].msgs.some((m) => m.type === 'wrong'), 'risposta errata segnalata al telefono');
   phones[0].send({ type: 'answer', text: words.join(' ').toLowerCase() });
   await waitFor(admin, (s) => s.phase === 'levelDone', `fragments risolto con "${words.join(' ')}"`);
+  admin.send({ type: 'next' }); await waitFor(admin, (s) => s.level && s.level.id === 'cipher', 'livello cipher');
+  await sleep(300);
+  assert(phones[1].state.level.title.includes('CODED MESSAGE') && phones[0].state.level.title.includes('CIFRATO'), 'titolo dell\'atto nella lingua della giocatrice');
+  { const key = {}; phones.forEach((p) => p.state.L.mine.forEach((k) => { key[k.sym] = k.letter; }));
+    const word = screen.state.L.cipher.split(' ').map((sym) => key[sym]).join('');
+    assert(word === 'BELLADONNA', `chiave ricomposta dai telefoni: ${word}`);
+    phones[2].send({ type: 'answer', text: 'bella donna' }); }
+  await waitFor(admin, (s) => s.phase === 'levelDone', 'messaggio decifrato');
   admin.send({ type: 'next' }); await waitFor(admin, (s) => s.level && s.level.id === 'riddles', 'livello riddles');
 
   // 3. riddles: ogni telefono risponde ai propri indovinelli con le risposte della regia
   await sleep(300);
-  const answers = admin.state.admin.riddleAnswers;
+  const answers = []; for (const m of admin.state.admin.cheat.matchAll(/(\d+)=([^·]+)/g)) answers[Number(m[1]) - 1] = m[2].trim();
   assert(phones.every((p) => p.state.L.mine.length === 1), 'un fascicolo per telefono');
   assert(phones.every((p) => answers[p.state.L.mine[0].idx] !== me(p).name), 'nessuna riceve il proprio fascicolo');
   assert(phones.some((p) => p.state.L.mine[0].q.includes('segreto ')), 'i fascicoli usano le schede');
@@ -73,6 +84,16 @@ async function waitFor(c, pred, label, ms = 15000) {
   assert(admin.state.L.letters.every(Boolean), 'tutte le lettere della parola d\'ordine svelate');
   phones[3].send({ type: 'password', text: 'contro veleno' });
   await waitFor(admin, (s) => s.phase === 'levelDone', 'parola d\'ordine CONTROVELENO accettata');
+  admin.send({ type: 'next' }); await waitFor(admin, (s) => s.level && s.level.id === 'seating', 'livello seating');
+  await sleep(300);
+  { const m = /Posti 1→\d+: ([^·]+)·/.exec(admin.state.admin.cheat); const solution = m[1].split(',').map((x) => x.trim());
+    assert(solution.length === 5, 'soluzione dei posti a tavola in regia');
+    assert(phones.every((p) => p.state.L.mine.length >= 1) || admin.state.L.clueCount < 12, 'indizi distribuiti tra i telefoni');
+    assert(phones[1].state.L.mine.every((c) => /sat|seat/.test(c)), 'indizi in inglese per Giulia');
+    phones[4].send({ type: 'order', order: solution.slice().reverse() }); await sleep(200);
+    assert(phones[4].state.L.lockedUntil > Date.now() + 5000, 'ordine sbagliato: 10 s di blocco');
+    phones[5].send({ type: 'order', order: solution }); }
+  await waitFor(admin, (s) => s.phase === 'levelDone', 'posti a tavola ricostruiti');
   admin.send({ type: 'next' }); await waitFor(admin, (s) => s.level && s.level.id === 'lights', 'livello lights');
 
   // Tempo scaduto: togliendo 61 minuti si entra in "dead"; aggiungendone 10 si riprende lo stesso livello.
@@ -92,7 +113,7 @@ async function waitFor(c, pred, label, ms = 15000) {
   await sleep(300);
   const keys = admin.state.admin.keys;
   let r = await get(`/k/${keys[0].code}`, `pid=${phones[0].pid}`); assert(r.body.includes('Fiala 1') && r.body.includes(keys[0].digit), 'QR fiala 1 scansionato mostra la cifra');
-  r = await get(`/k/${keys[0].code}`, `pid=${phones[1].pid}`); assert(r.body.includes('già trovata'), 'stessa fiala riscansionata: già trovata');
+  r = await get(`/k/${keys[0].code}`, `pid=${phones[1].pid}`); assert(r.body.includes('already found'), 'stessa fiala riscansionata: già trovata (in inglese per Giulia)');
   r = await get(`/k/${keys[1].code}`, 'pid=sconosciuto'); assert(r.body.includes('Chi sei'), 'telefono non registrato rifiutato');
   r = await get(`/k/${keys[1].code}`, `pid=${phones[5].pid}`); assert(r.body.includes('Fiala 2'), 'QR fiala 2 scansionato');
   phones[9].send({ type: 'code', text: keys[2].code.toLowerCase() });
@@ -103,7 +124,7 @@ async function waitFor(c, pred, label, ms = 15000) {
   // 6. reconnect: tutte scansionano il QR dello schermo (token corrente)
   await sleep(300);
   r = await get(`/r/XXXX`, `pid=${phones[0].pid}`); assert(r.body.includes('Scaduto'), 'token errato rifiutato');
-  for (const p of phones) { const tok = admin.state.L.token; const rr = await get(`/r/${tok}`, `pid=${p.pid}`); assert(rr.body.includes('Prova salvata'), `${me(p).name} ha salvato la prova via QR`); }
+  for (const p of phones) { const tok = admin.state.L.token; const rr = await get(`/r/${tok}`, `pid=${p.pid}`); assert(rr.body.includes('Prova salvata') || rr.body.includes('Evidence saved'), `${me(p).name} ha salvato la prova via QR`); }
   await waitFor(admin, (s) => s.phase === 'levelDone', 'tutte le prove salvate');
   admin.send({ type: 'next' }); await waitFor(admin, (s) => s.level && s.level.id === 'simon', 'livello simon');
 
@@ -117,6 +138,17 @@ async function waitFor(c, pred, label, ms = 15000) {
     if (round < 2) await waitFor(admin, (s) => s.L.round === round + 1, `round ${round + 1} completato`);
   }
   await waitFor(admin, (s) => s.phase === 'levelDone', 'sequenza completata (3 round)');
+  admin.send({ type: 'next' }); await waitFor(admin, (s) => s.level && s.level.id === 'rooms', 'livello rooms');
+  await sleep(300);
+  { const m = /Stanza giusta: ([^·]+)·/.exec(admin.state.admin.cheat); const targetName = m[1].trim();
+    const target = phones[0].state.L.rooms.find((r) => r.name === targetName).id;
+    const other = phones[0].state.L.rooms.find((r) => r.id !== target).id;
+    assert(phones[1].state.L.rooms.some((r) => /Kitchen|Cellar/.test(r.name)), 'stanze in inglese per Giulia');
+    phones.forEach((p, i) => p.send({ type: 'vote', room: i < 6 ? target : other }));
+    await waitFor(admin, (s) => s.L.rounds === 1, 'voto non unanime: la porta resta chiusa');
+    await sleep(2800);
+    phones.forEach((p) => p.send({ type: 'vote', room: target })); }
+  await waitFor(admin, (s) => s.phase === 'levelDone', 'stanza giusta votata all\'unanimità');
   admin.send({ type: 'next' }); await waitFor(admin, (s) => s.level && s.level.id === 'vault', 'livello vault');
 
   // 8. vault: tutte inseriscono il codice entro 20s
