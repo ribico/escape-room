@@ -19,6 +19,11 @@
 
   function render() {
     const A = S.admin;
+    $('modeLabel').textContent = S.mode === 'party' ? 'ora: giochi della festa (QR + classifica)' : 'ora: escape room';
+    $('modeParty').className = S.mode === 'party' ? '' : 'secondary'; $('modeEscape').className = S.mode === 'escape' ? '' : 'secondary';
+    { const ids = Object.keys(A.gameNames); const tot = {}; A.votes.forEach((r) => { for (const [g, y] of Object.entries(r.votes)) { tot[g] = tot[g] || { yes: 0, no: 0 }; tot[g][y ? 'yes' : 'no']++; } });
+      const sorted = ids.map((g) => ({ g, ...(tot[g] || { yes: 0, no: 0 }) })).sort((a, b) => b.yes - a.yes || a.no - b.no);
+      $('votes').innerHTML = `<div class="muted">${S.voters} votanti</div>` + sorted.map((r) => `<div>${esc(A.gameNames[r.g])}: <b>👍 ${r.yes}</b> · 👎 ${r.no}</div>`).join(''); }
     $('links').innerHTML = `<a href="${A.screenUrl}" target="_blank">Schermo</a> · <a href="${A.printUrl}" target="_blank">Stampa QR</a> · <span class="mono">${esc(S.joinUrl)}</span>`;
     $('phase').textContent = `Fase: ${S.phase}` + (S.level ? ` · ${S.level.title}` : '') + ` · Suggerimenti usati: ${S.hintsUsed}`;
     let flow = '';
@@ -38,6 +43,9 @@
     document.querySelectorAll('[data-msg]').forEach((b) => { b.onclick = () => send(JSON.parse(b.dataset.msg)); });
     document.querySelectorAll('.teamSel').forEach((s) => { s.onchange = () => send({ type: 'setTeam', pid: s.dataset.pid, team: Number(s.value) }); });
   }
+  $('modeParty').onclick = () => send({ type: 'mode', mode: 'party' });
+  $('modeEscape').onclick = () => send({ type: 'mode', mode: 'escape' });
+  $('resetVotes').onclick = () => { if (confirm('Azzerare tutti i voti?')) send({ type: 'resetVotes' }); };
   $('gotoBtn').onclick = () => send({ type: 'goto', idx: Number($('gotoSel').value) });
   $('customHintBtn').onclick = () => { const t = $('customHint').value.trim(); if (t) { send({ type: 'hint', text: t }); $('customHint').value = ''; } };
   document.querySelectorAll('[data-min]').forEach((b) => { b.onclick = () => send({ type: 'addTime', minutes: Number(b.dataset.min) }); });

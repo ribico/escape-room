@@ -83,7 +83,11 @@ function scenesFor(key, lang, extra) {
 }
 
 // ---------------------------------------------------------------- stato
+const GAMES = CONFIG.games || [];
+const DATA_FILE = path.join(__dirname, 'data', 'party.json');
 const S = {
+  mode: CONFIG.startMode === 'escape' ? 'escape' : 'party',   // party (QR + voti) | escape (escape room)
+  votes: {},               // pid -> { gameId: true|false }
   phase: 'lobby',          // lobby | intro | level | levelDone | dead | win
   levelIdx: -1,
   players: {},             // pid -> {pid,name,team,lang,connected,joinedAt,profile}
@@ -94,6 +98,40 @@ const S = {
   L: {}                    // stato del livello corrente
 };
 const clients = new Set();  // {ws, role, pid, admin}
+
+// Persistenza leggera: iscrizioni, schede e voti sopravvivono a un riavvio del server.
+function loadData() {
+  try {
+    const d = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    for (const p of d.players || []) S.players[p.pid] = { ...p, connected: false };
+    S.votes = d.votes || {};
+    if (d.mode) S.mode = d.mode;
+    console.log(`  Ripristinate ${Object.keys(S.players).length} iscrizioni da data/party.json`);
+  } catch (e) { /* nessun salvataggio precedente */ }
+}
+let saveTimer = null;
+function saveData() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
+      fs.writeFileSync(DATA_FILE, JSON.stringify({ mode: S.mode, votes: S.votes, players: Object.values(S.players).map(({ connected, ...p }) => p) }, null, 1));
+    } catch (e) { console.error('Salvataggio non riuscito:', e.message); }
+  }, 500);
+}
+// Classifica dei giochi: ordinata per "sì", a parità per meno "no".
+function ranking() {
+  const rows = GAMES.map((g) => ({ id: g.id, yes: 0, no: 0 }));
+  for (const v of Object.values(S.votes)) for (const r of rows) { if (v[r.id] === true) r.yes++; else if (v[r.id] === false) r.no++; }
+  return rows.sort((a, b) => b.yes - a.yes || a.no - b.no);
+}
+function wifiQr() {
+  const w = CONFIG.wifi || {};
+  if (!w.ssid) return null;
+  const e = (x) => String(x || '').replace(/([\\;,:"])/g, '\\$1');
+  const sec = w.password ? (w.security || 'WPA') : 'nopass';
+  return `WIFI:T:${sec};S:${e(w.ssid)};${w.password ? `P:${e(w.password)};` : ''};`;
+}
 
 function logEvent(text) { S.log.unshift({ at: Date.now(), text }); S.log = S.log.slice(0, 80); }
 function toast(text, kind = 'info') { S.toast = { text, kind, at: Date.now() }; }
@@ -509,7 +547,11 @@ function publicView(lang) {
     startedAt: S.startedAt, deadline: deadline(), finishedAt: S.finishedAt || null, hintsUsed: S.hintsUsed,
     hint: S.hint ? { at: S.hint.at, text: hintText(lang) } : null,
     toast: S.toast ? { at: S.toast.at, kind: S.toast.kind, text: tr(S.toast.text, lang) } : null,
-    joinUrl: BASE_URL() + '/', now: Date.now()
+    joinUrl: BASE_URL() + '/', now: Date.now(),
+    mode: S.mode, wifi: CONFIG.wifi ? { ssid: CONFIG.wifi.ssid, password: CONFIG.wifi.password || '', qr: wifiQr() } : null,
+    games: GAMES.map((g) => ({ id: g.id, category: g.category || '', name: tr(g.name, lang), desc: tr(g.desc, lang) })),
+    gameCategories: (CONFIG.gameCategories || []).map((c) => ({ id: c.id, name: tr(c.name, lang) })),
+    ranking: ranking(), voters: Object.keys(S.votes).length
   };
 }
 function viewFor(c) {
@@ -521,11 +563,11 @@ function viewFor(c) {
   if (c.role === 'screen') {
     // Lo schermo è condiviso: porta anche la seconda lingua, mostrata sotto alla prima.
     const alt = publicView(SCREEN_LANG === 'en' ? 'it' : 'en');
-    v.alt = { lang: alt.lang, level: alt.level, story: alt.story, hint: alt.hint, toast: alt.toast };
+    v.alt = { lang: alt.lang, level: alt.level, story: alt.story, hint: alt.hint, toast: alt.toast, games: alt.games };
     if (lv && LEVEL_IMPL[lv.id].view.length > 1) v.alt.L = LEVEL_IMPL[lv.id].view(null, alt.lang);
   }
   if (c.role === 'phone') {
-    v.me = p ? { pid: p.pid, name: p.name, team: p.team, lang: p.lang, teamName: teamOf(p).name, color: teamOf(p).color, profile: p.profile || null } : null;
+    v.me = p ? { pid: p.pid, name: p.name, team: p.team, lang: p.lang, teamName: teamOf(p).name, color: teamOf(p).color, profile: p.profile || null, votes: S.votes[p.pid] || {} } : null;
     v.scenes = S.phase === 'intro' ? scenesFor('prologue', lang) : S.phase === 'dead' ? scenesFor('dead', lang) : lv ? scenesFor(lv.id, lang) : [];
     v.hintScenes = S.hint ? scenesFor('hint', lang, hintText(lang)) : null;
   }
@@ -542,7 +584,8 @@ function viewFor(c) {
     }
     v.admin = { log: S.log, hints: lv ? lv.hints.map((h) => tr(h, 'it')) : [], levels: C.LEVELS.map((l) => tr(l.title, 'it')), adminKey: ADMIN_KEY, keys: CONFIG.keys,
       printUrl: `${BASE_URL()}/print?key=${ADMIN_KEY}`, screenUrl: `${BASE_URL()}/screen`, cheat: cheat.text || '',
-      profiles: Object.values(S.players).map((p) => ({ name: p.name, lang: p.lang, profile: p.profile || null })) };
+      profiles: Object.values(S.players).map((p) => ({ name: p.name, lang: p.lang, profile: p.profile || null })),
+      votes: Object.values(S.players).map((p) => ({ name: p.name, votes: S.votes[p.pid] || {} })), gameNames: Object.fromEntries(GAMES.map((g) => [g.id, tr(g.name, 'it')])) };
   }
   return v;
 }
@@ -617,15 +660,21 @@ wss.on('connection', (ws) => {
         S.players[pid] = { pid, name, team, lang, connected: true, joinedAt: Date.now() };
         logEvent(`${name} è entrata (squadra ${CONFIG.teams[team].name}, ${lang})`);
       } else { S.players[pid].name = name; S.players[pid].lang = lang; }
-      c.pid = pid; S.players[pid].connected = true;
+      c.pid = pid; S.players[pid].connected = true; saveData();
       send(c, { type: 'joined', pid });
       return playersChanged();
     }
-    if (m.type === 'setLang' && c.role === 'phone' && c.pid && S.players[c.pid] && LANGS.includes(m.lang)) { S.players[c.pid].lang = m.lang; return broadcast(); }
+    if (m.type === 'vote' && c.role === 'phone' && c.pid && S.players[c.pid] && GAMES.some((g) => g.id === m.game)) {
+      const v = (S.votes[c.pid] = S.votes[c.pid] || {});
+      if (m.yes === null) delete v[m.game]; else v[m.game] = !!m.yes;
+      saveData();
+      return broadcast();
+    }
+    if (m.type === 'setLang' && c.role === 'phone' && c.pid && S.players[c.pid] && LANGS.includes(m.lang)) { S.players[c.pid].lang = m.lang; saveData(); return broadcast(); }
     if (m.type === 'profile' && c.role === 'phone' && c.pid && S.players[c.pid] && ['lobby', 'intro'].includes(S.phase)) {
       const prof = {};
       for (const f of C.PROFILE_FIELDS) { const v = String((m.data || {})[f.key] || '').trim().slice(0, 140); if (v) prof[f.key] = v; }
-      S.players[c.pid].profile = prof;
+      S.players[c.pid].profile = prof; saveData();
       logEvent(`${S.players[c.pid].name} ha compilato la scheda`);
       return broadcast();
     }
@@ -661,9 +710,11 @@ function adminAction(m) {
       break;
     }
     case 'addTime': S.extraMs += Number(m.minutes || 5) * 60000; toast(C.L(`Il Cuoco concede ${m.minutes || 5} minuti extra`, `The Cook grants ${m.minutes || 5} extra minutes`), 'good'); if (S.phase === 'dead' && deadline() > Date.now()) S.phase = 'level'; break;
-    case 'kick': delete S.players[m.pid]; for (const c of clients) if (c.pid === m.pid) c.pid = null; playersChanged(); break;
-    case 'setTeam': if (S.players[m.pid]) { S.players[m.pid].team = Number(m.team); playersChanged(); } break;
-    case 'reset': resetGame(!m.dropPlayers); break;
+    case 'kick': delete S.players[m.pid]; delete S.votes[m.pid]; for (const c of clients) if (c.pid === m.pid) c.pid = null; saveData(); playersChanged(); break;
+    case 'setTeam': if (S.players[m.pid]) { S.players[m.pid].team = Number(m.team); saveData(); playersChanged(); } break;
+    case 'reset': resetGame(!m.dropPlayers); if (m.dropPlayers) { S.votes = {}; } saveData(); break;
+    case 'mode': S.mode = m.mode === 'escape' ? 'escape' : 'party'; logEvent(`Schermo: ${S.mode === 'party' ? 'giochi della festa' : 'escape room'}`); saveData(); break;
+    case 'resetVotes': S.votes = {}; logEvent('Voti azzerati'); saveData(); break;
     case 'win': winGame(); break;
     case 'toast': toast(String(m.text || ''), 'info'); break;
   }
@@ -682,12 +733,15 @@ setInterval(() => {
 }, 150);
 setInterval(broadcast, 5000);
 
+loadData();
 server.listen(PORT, '0.0.0.0', () => {
-  console.log('\n  Escape room "Chi ha avvelenato ' + VICTIM + '?" in ascolto');
+  console.log('\n  Festa + escape room "Chi ha avvelenato ' + VICTIM + '?" in ascolto');
   console.log(`  Telefoni  : ${BASE_URL()}/`);
   console.log(`  Schermo   : ${BASE_URL()}/screen`);
   console.log(`  Regia     : ${BASE_URL()}/admin   (chiave: ${ADMIN_KEY})`);
-  console.log(`  Stampa QR : ${BASE_URL()}/print?key=${ADMIN_KEY}\n`);
+  console.log(`  Stampa QR : ${BASE_URL()}/print?key=${ADMIN_KEY}`);
+  console.log(`  Schermo iniziale: ${S.mode === 'party' ? 'giochi della festa (QR Wi-Fi + registrazione + classifica)' : 'escape room'}\n`);
+  if (!CONFIG.wifi || !CONFIG.wifi.password || /INSERISCI/.test(CONFIG.wifi.password)) console.log('  ATTENZIONE: password Wi-Fi non impostata in config.json (wifi.password): il QR Wi-Fi non funzionerà.\n');
   const c = lanCandidates();
   if (c.length > 1 && !(process.env.HOST || '').trim() && !String(CONFIG.host || '').trim()) {
     console.log('  Questo PC ha più indirizzi di rete. Ho scelto il primo; se i telefoni non si collegano, avvia con');

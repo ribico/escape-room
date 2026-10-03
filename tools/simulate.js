@@ -25,7 +25,7 @@ async function waitFor(c, pred, label, ms = 15000) {
 
 (async () => {
   const admin = client('admin', { key: KEY }); await admin.open;
-  await sleep(200); admin.send({ type: 'reset', dropPlayers: true });
+  await sleep(200); admin.send({ type: 'reset', dropPlayers: true }); admin.send({ type: 'resetVotes' }); admin.send({ type: 'mode', mode: 'party' });
   const phones = NAMES.map(() => client('phone', { pid: null }));
   await Promise.all(phones.map((p) => p.open));
   phones.forEach((p, i) => p.send({ type: 'join', name: NAMES[i], lang: i === 1 ? 'en' : 'it' }));
@@ -41,6 +41,15 @@ async function waitFor(c, pred, label, ms = 15000) {
   assert(!phones[0].state.players || !JSON.stringify(phones[0].state).includes('segreto 3'), 'un telefono non vede le schede delle altre');
 
   const screen = client('screen'); await screen.open; await sleep(300);
+  // Modalità festa: voti sì/no, classifica sullo schermo, poi passaggio all'escape room dalla regia.
+  assert(screen.state.mode === 'party' && screen.state.wifi && screen.state.wifi.qr.startsWith('WIFI:'), 'schermo in modalità festa con QR Wi-Fi');
+  assert(phones[1].state.games[0].name === 'Karaoke' && phones[1].state.gameCategories[1].name === 'Action & movement', 'lista giochi in inglese per Giulia');
+  const gid = phones[0].state.games.map((g) => g.id);
+  phones.forEach((p, i) => { p.send({ type: 'vote', game: gid[0], yes: i < 9 }); p.send({ type: 'vote', game: gid[1], yes: i < 4 }); p.send({ type: 'vote', game: gid[2], yes: i % 2 === 0 }); });
+  await waitFor(screen, (s) => s.voters === 12 && s.ranking[0].id === gid[0] && s.ranking[0].yes === 9, 'classifica: primo gioco con 9 sì');
+  phones[0].send({ type: 'vote', game: gid[0], yes: null }); await waitFor(screen, (s) => s.ranking[0].yes === 8, 'voto ritirato');
+  assert(phones[0].state.me.votes[gid[1]] === true && phones[0].state.me.votes[gid[0]] === undefined, 'il telefono vede i propri voti');
+  admin.send({ type: 'mode', mode: 'escape' }); await waitFor(screen, (s) => s.mode === 'escape', 'regia: schermo passato all\'escape room');
   admin.send({ type: 'start' }); await waitFor(admin, (s) => s.phase === 'intro', 'intro');
   assert(phones[1].state.story.title.includes('POISONED') && phones[0].state.story.title.includes('AVVELENATO'), 'storia in inglese per Giulia, in italiano per Martina');
   assert(screen.state.alt && screen.state.alt.story.title.includes('POISONED'), 'lo schermo riceve anche la seconda lingua');

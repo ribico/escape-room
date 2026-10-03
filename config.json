@@ -38,5 +38,343 @@
       "hint": "Dove ci si guarda ogni mattina (specchio del bagno)"
     }
   ],
-  "victim": "Martina"
+  "victim": "Martina",
+  "startMode": "party",
+  "wifi": {
+    "ssid": "ribico-loft",
+    "password": "INSERISCI-LA-PASSWORD",
+    "security": "WPA"
+  },
+  "games": [
+    {
+      "id": "karaoke",
+      "category": "ice",
+      "name": {
+        "it": "Karaoke",
+        "en": "Karaoke"
+      },
+      "desc": {
+        "it": "Cantare liberamente al microfono, da soli o in compagnia, per sciogliere la voce e divertirsi.",
+        "en": "Sing freely at the microphone, alone or together, to warm up and have fun."
+      }
+    },
+    {
+      "id": "keepdrawing",
+      "category": "ice",
+      "name": {
+        "it": "Keep drawing!",
+        "en": "Keep drawing!"
+      },
+      "desc": {
+        "it": "Una persona inizia a disegnare qualcosa sulla schiena di un'altra. Il processo si ripete di schiena in schiena fino all'ultima persona della fila, che deve indovinare o ridisegnare il soggetto.",
+        "en": "One person draws something on another's back. It is passed on from back to back until the last person in the line, who must guess or redraw the subject."
+      }
+    },
+    {
+      "id": "dontsayit",
+      "category": "ice",
+      "name": {
+        "it": "Don't say it!",
+        "en": "Don't say it!"
+      },
+      "desc": {
+        "it": "Si scelgono delle categorie; una persona dice quante cose conosce di quella categoria e la successiva deve nominarne almeno una in più. L'ultima della catena deve ripeterle tutte per dimostrare che non stava mentendo.",
+        "en": "Pick categories; one person says how many things she knows in that category and the next must name at least one more. The last in the chain must list them all to prove she wasn't bluffing."
+      }
+    },
+    {
+      "id": "party",
+      "category": "ice",
+      "name": {
+        "it": "I go to the party at... and I can enter",
+        "en": "I go to the party at... and I can enter"
+      },
+      "desc": {
+        "it": "Chi inventa il gioco dice \"Vado alla festa alle [un'ora] e posso entrare\". Le altre devono dire una frase simile con un'altra ora e capire la regola segreta per poter \"entrare\" anche loro.",
+        "en": "The game maker says \"I go to the party at [a time] and I can enter\". The others say a similar sentence with another time and must work out the secret rule to be allowed in too."
+      }
+    },
+    {
+      "id": "colafanta",
+      "category": "action",
+      "name": {
+        "it": "Cola, Fanta, Sprite",
+        "en": "Cola, Fanta, Sprite"
+      },
+      "desc": {
+        "it": "C'è una linea al centro. Ci si sposta a sinistra quando viene detto \"Cola\", a destra per \"Fanta\", e si aprono le gambe a cavallo della linea per \"Sprite\".",
+        "en": "There is a line in the middle. Jump left on \"Cola\", right on \"Fanta\", and straddle the line on \"Sprite\"."
+      }
+    },
+    {
+      "id": "colorato",
+      "category": "action",
+      "name": {
+        "it": "Stupido gioco colorato",
+        "en": "Silly colour game"
+      },
+      "desc": {
+        "it": "Ci sono più fogli colorati sul tavolo. Una persona dice dei colori e un'altra deve toccare qualsiasi foglio che non sia del colore nominato.",
+        "en": "Several coloured sheets are on the table. One person calls out colours and another must touch any sheet that is NOT the colour called."
+      }
+    },
+    {
+      "id": "numeri",
+      "category": "action",
+      "name": {
+        "it": "Prendi i numeri!",
+        "en": "Catch the numbers!"
+      },
+      "desc": {
+        "it": "Tutte in cerchio con un numero, tranne una persona bendata al centro. Questa chiama due numeri e le due persone devono scambiarsi di posto passando in mezzo, mentre la bendata cerca di prenderne al volo almeno una.",
+        "en": "Everyone in a circle has a number, except one blindfolded person in the middle. She calls two numbers and those two must swap places through the middle while she tries to catch at least one."
+      }
+    },
+    {
+      "id": "spoon",
+      "category": "action",
+      "name": {
+        "it": "Musical spoon",
+        "en": "Musical spoon"
+      },
+      "desc": {
+        "it": "Ci sono alcuni cucchiai sul tavolo; quando la musica si ferma bisogna riuscire a prenderne uno prima di qualcun altro.",
+        "en": "Some spoons are on the table; when the music stops you must grab one before someone else does."
+      }
+    },
+    {
+      "id": "musicalq",
+      "category": "action",
+      "name": {
+        "it": "Musical questions",
+        "en": "Musical questions"
+      },
+      "desc": {
+        "it": "Si indossano le cuffie con la musica alta mentre il pubblico fa delle domande; bisogna rispondere a voce alta anche se non si è sentito nulla.",
+        "en": "Wear headphones with loud music while the audience asks questions; you must answer out loud even though you heard nothing."
+      }
+    },
+    {
+      "id": "acqua",
+      "category": "skill",
+      "name": {
+        "it": "Se fai cadere l'acqua, perdi",
+        "en": "Spill the water, you lose"
+      },
+      "desc": {
+        "it": "Una sfida di precisione e controllo: chi fa cadere o rovesciare l'acqua perde.",
+        "en": "A test of precision and control: whoever drops or spills the water loses."
+      }
+    },
+    {
+      "id": "bicchieri",
+      "category": "skill",
+      "name": {
+        "it": "Non calpestare i bicchieri",
+        "en": "Don't step on the cups"
+      },
+      "desc": {
+        "it": "Si cammina bendate cercando di muoversi nello spazio senza calpestare o far cadere le tazzine o i bicchieri per terra.",
+        "en": "Walk blindfolded across the room without stepping on or knocking over the cups on the floor."
+      }
+    },
+    {
+      "id": "disgusting",
+      "category": "skill",
+      "name": {
+        "it": "Disgusting drink",
+        "en": "Disgusting drink"
+      },
+      "desc": {
+        "it": "Una persona bendata sceglie 3 bevande a caso e qualcun altro le mescola in un bicchiere. Si mettono delle carte sopra il bicchiere e si soffia a turno: chi fa cadere l'ultima carta deve bere tutto l'intruglio.",
+        "en": "A blindfolded person picks 3 random drinks and someone mixes them in a glass. Cards are placed on top and everyone blows in turn: whoever drops the last card drinks the whole concoction."
+      }
+    },
+    {
+      "id": "fallingcups",
+      "category": "skill",
+      "name": {
+        "it": "Falling cups",
+        "en": "Falling cups"
+      },
+      "desc": {
+        "it": "Tutte hanno un bicchiere in testa. Bisogna far cadere il bicchiere delle altre facendo attenzione a non far cadere il proprio.",
+        "en": "Everyone has a cup on her head. Knock the others' cups off while keeping your own in place."
+      }
+    },
+    {
+      "id": "getup",
+      "category": "skill",
+      "name": {
+        "it": "Get up!",
+        "en": "Get up!"
+      },
+      "desc": {
+        "it": "Bisogna riuscire ad alzarsi da terra mantenendo un bicchiere in testa senza farlo cadere.",
+        "en": "Stand up from the floor with a cup on your head without dropping it."
+      }
+    },
+    {
+      "id": "ballcups",
+      "category": "skill",
+      "name": {
+        "it": "Get the ball into the cups!",
+        "en": "Get the ball into the cups!"
+      },
+      "desc": {
+        "it": "Un classico gioco di lancio: bisogna fare centro con una pallina dentro i bicchieri.",
+        "en": "A classic throwing game: land the ball inside the cups."
+      }
+    },
+    {
+      "id": "padellaro",
+      "category": "skill",
+      "name": {
+        "it": "Gioco delle mani di Padellaro",
+        "en": "Padellaro's hands game"
+      },
+      "desc": {
+        "it": "Tutte mettono le mani sul tavolo. Se si batte la mano una volta il turno passa alla persona successiva, due volte inverte la direzione, e con il pugno si salta il proprio turno.",
+        "en": "Everyone puts her hands on the table. One slap passes the turn to the next person, two slaps reverse the direction, a fist skips your turn."
+      }
+    },
+    {
+      "id": "foosball",
+      "category": "skill",
+      "name": {
+        "it": "Table football",
+        "en": "Table football"
+      },
+      "desc": {
+        "it": "Calcio balilla.",
+        "en": "Foosball."
+      }
+    },
+    {
+      "id": "impostor",
+      "category": "mind",
+      "name": {
+        "it": "Impostor",
+        "en": "Impostor"
+      },
+      "desc": {
+        "it": "Un gioco di deduzione in cui bisogna scoprire chi, tra le partecipanti, è l'impostore che non conosce la parola segreta.",
+        "en": "A deduction game: find out who among the players is the impostor who doesn't know the secret word."
+      }
+    },
+    {
+      "id": "nascondino",
+      "category": "mind",
+      "name": {
+        "it": "Nascondino",
+        "en": "Hide and seek"
+      },
+      "desc": {
+        "it": "Il classico nascondino.",
+        "en": "Classic hide and seek."
+      }
+    },
+    {
+      "id": "indovinaparola",
+      "category": "mind",
+      "name": {
+        "it": "Indovina la parola",
+        "en": "Guess the word"
+      },
+      "desc": {
+        "it": "Una persona deve indovinare la parola che il gruppo ha scelto apposta per lei facendo domande o ricevendo indizi.",
+        "en": "One person must guess the word the group chose for her by asking questions or getting clues."
+      }
+    },
+    {
+      "id": "guesssong",
+      "category": "mind",
+      "name": {
+        "it": "Guess the song",
+        "en": "Guess the song"
+      },
+      "desc": {
+        "it": "Ascoltare l'inizio di una canzone e indovinarne il titolo o l'autore il più velocemente possibile.",
+        "en": "Listen to the start of a song and guess the title or artist as fast as you can."
+      }
+    },
+    {
+      "id": "guessmovie",
+      "category": "mind",
+      "name": {
+        "it": "Guess the movie/character",
+        "en": "Guess the movie/character"
+      },
+      "desc": {
+        "it": "Indovinare il titolo di un film o il nome di un personaggio famoso attraverso descrizioni o indizi.",
+        "en": "Guess a movie title or a famous character from descriptions or clues."
+      }
+    },
+    {
+      "id": "chisono",
+      "category": "mind",
+      "name": {
+        "it": "Chi sono? (a gruppi)",
+        "en": "Who am I? (in groups)"
+      },
+      "desc": {
+        "it": "Ogni gruppo ha il nome di un personaggio e deve fare domande per indovinare chi è.",
+        "en": "Each group is given a character and must ask questions to work out who it is."
+      }
+    },
+    {
+      "id": "lupus",
+      "category": "mind",
+      "name": {
+        "it": "Lupus in Fabula / Mafia",
+        "en": "Werewolf / Mafia"
+      },
+      "desc": {
+        "it": "Ci sono diversi ruoli (lupi o mafia e persone normali); i lupi devono eliminare le altre di nascosto e le cittadine devono capire chi sono per vincere.",
+        "en": "Different roles (wolves or mafia and ordinary people): the wolves secretly eliminate the others, the villagers must work out who they are to win."
+      }
+    },
+    {
+      "id": "cluedo",
+      "category": "mind",
+      "name": {
+        "it": "Cluedo",
+        "en": "Cluedo"
+      },
+      "desc": {
+        "it": "Il gioco da tavolo investigativo.",
+        "en": "The detective board game."
+      }
+    }
+  ],
+  "gameCategories": [
+    {
+      "id": "ice",
+      "name": {
+        "it": "Icebreakers",
+        "en": "Icebreakers"
+      }
+    },
+    {
+      "id": "action",
+      "name": {
+        "it": "Azione e movimento",
+        "en": "Action & movement"
+      }
+    },
+    {
+      "id": "skill",
+      "name": {
+        "it": "Sfide di abilità",
+        "en": "Party & skill challenges"
+      }
+    },
+    {
+      "id": "mind",
+      "name": {
+        "it": "Mente e indovinelli",
+        "en": "Mind & guessing games"
+      }
+    }
+  ]
 }

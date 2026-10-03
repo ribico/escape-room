@@ -1,4 +1,29 @@
-# "Chi ha avvelenato Martina?" — escape room per la festa di compleanno
+# Festa di Martina: giochi + escape room "Chi ha avvelenato Martina?"
+
+Un unico server guida tutta la festa. All'inizio lo **schermo grande** è in modalità **Giochi della festa**:
+mostra il QR per collegarsi al Wi-Fi, il QR per registrarsi, e la classifica in tempo reale dei giochi
+che le ospiti votano dal telefono (sì/no per ciascun gioco della lista). Al momento giusto, dalla regia,
+si passa alla modalità **Escape room** e viceversa.
+
+## Modalità Giochi della festa
+
+- **Schermo**: a sinistra il QR Wi-Fi (`wifi` in `config.json`: `ssid`, `password`, `security`) e il QR di
+  registrazione; a destra i **10 giochi più votati**, ordinati per numero di "sì" (a parità, meno "no"), con nome
+  italiano e inglese, barra proporzionale e numero di votanti.
+- **Telefono**: la stessa registrazione dell'escape room (prima la lingua, poi il nome). Poi la lista dei giochi,
+  divisa per categoria (lista scorrevole, lunga quanto serve), con i pulsanti 👍 Sì / 👎 No per ciascuno; si può cambiare idea e togliere il voto
+  premendo di nuovo. Il cambio lingua è la bandierina in alto a destra.
+- **Regia**: in cima, i due pulsanti "Giochi della festa" / "Escape room" cambiano ciò che vedono schermo e
+  telefoni; più in basso i totali dei voti e "Azzera voti".
+- La lista dei giochi e le categorie sono in `config.json` (`games`, `gameCategories`), in italiano e inglese.
+- Iscrizioni, schede e voti vengono salvati in `data/party.json`: se il server si riavvia non si perde nulla
+  (le ragazze rientrano con lo stesso nome; lo stato di una partita in corso invece riparte dalla lobby).
+- `startMode` in `config.json` decide la modalità all'avvio (`party` o `escape`).
+
+Prima della festa: scrivi la password del Wi-Fi in `config.json`, altrimenti il QR Wi-Fi non funziona
+(il server lo ricorda all'avvio).
+
+## Escape room
 
 Escape room virtuale collaborativa in stile giallo per ~12 persone, pensata per durare circa un'ora.
 Gira come web app su un PC nella rete Wi-Fi di casa: uno **schermo grande** mostra la storia
@@ -106,12 +131,13 @@ Il terminale stampa gli indirizzi da usare, per esempio:
   Stampa QR : http://192.168.1.20:3000/print?key=4821
 ```
 
-1. Apri **/screen** sul TV a schermo intero (F11) e clicca "Attiva audio".
+1. Apri **/screen** sul TV a schermo intero (F11) e clicca "Attiva audio". Parte in modalità Giochi della festa.
 2. Apri **/admin** sul tuo telefono o su un secondo monitor: è la regia (chiave nel terminale).
 3. Le ragazze inquadrano il QR sullo schermo, scrivono il nome, vengono assegnate automaticamente
    alla squadra con meno giocatrici (NEON, CYBER, PIXEL) e compilano la scheda riservata.
    Lo schermo e la regia mostrano quante schede sono state compilate.
-4. Premi **Inizia** nella regia: parte il prologo e il timer di 60 minuti; poi **Livello 1**.
+4. Quando è il momento dell'escape room, premi **Escape room** in cima alla regia (schermo e telefoni passano
+   alla lobby con le schede riservate), poi **Inizia**: parte il prologo e il timer di 60 minuti; poi **Livello 1**.
 5. Ogni atto superato passa automaticamente al successivo dopo 7 secondi. Dalla regia puoi
    inviare suggerimenti (appaiono sullo schermo e fanno vibrare i telefoni), aggiungere tempo,
    saltare o ripetere un atto, forzare la soluzione, leggere le schede e le risposte.
@@ -137,7 +163,8 @@ Il terminale stampa gli indirizzi da usare, per esempio:
 
 Tutto è in due file:
 
-- `config.json`: nome e età della festeggiata, nome della vittima, durata, nomi/colori delle squadre, codici e cifre delle fiale, porta.
+- `config.json`: nome e età della festeggiata, nome della vittima, durata, nomi/colori delle squadre, codici e cifre delle fiale, porta,
+  Wi-Fi, lista e categorie dei giochi da votare, modalità iniziale.
 - `lib/content.js`: tutti i testi in due lingue (`L('italiano', 'english')`): storia, titoli/istruzioni/suggerimenti degli atti,
   domande della scheda riservata, fascicolo, parola d'ordine, parole del biglietto strappato, parola cifrata, stanze e
   indizi, scene animate.

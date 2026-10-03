@@ -30,7 +30,8 @@
       saved: '✔ Prova salvata!', waitOthers: 'Aspetta le altre ({n} pronte).', erasing: 'PROVA IN CANCELLAZIONE', reconnect: 'Inquadra con la fotocamera il QR sullo schermo, oppure digita il codice scritto sotto al QR.', code: 'CODICE', saveProof: 'SALVA LA PROVA',
       simonRound: 'Dose {a}/{b} · ', simonWatch: 'Guarda lo schermo e memorizza...', simonGo: 'Premi quando tocca al tuo colore!',
       roomsClue: 'Il tuo indizio', roomsNoClue: 'Non hai indizi: ascolta le altre.', roomsHelp: 'Vota la stanza. Puoi cambiare voto finché non avete votato tutte.', voted: 'Hanno votato: {a}/{b}', yourVote: 'Il tuo voto',
-      confirmed: '✔ Confermato', ready: '{a}/{b} pronte. Forza!', vault: 'Inserisci il codice a 3 cifre (fiala 1, fiala 2, fiala 3). Tutte dovete confermare entro 20 secondi dalla prima!'
+      confirmed: '✔ Confermato', ready: '{a}/{b} pronte. Forza!', vault: 'Inserisci il codice a 3 cifre (fiala 1, fiala 2, fiala 3). Tutte dovete confermare entro 20 secondi dalla prima!',
+      partyTitle: 'Vota i giochi', partyHelp: 'Per ogni gioco dì se ti va o no: la classifica sullo schermo si aggiorna in tempo reale. Puoi cambiare idea quando vuoi.', yes: '👍 Sì', no: '👎 No', votedCount: 'Hai votato {a} giochi su {b}.', partyWait: 'Quando sarà il momento, la regia avvierà il gioco grande: tieni questa pagina aperta.'
     },
     en: {
       terminal: 'INVESTIGATION · TERMINAL', solved: 'CASE SOLVED', timeout: 'TIME IS UP', hint: 'HINT', connected: 'connected', connecting: 'connecting...',
@@ -49,11 +50,13 @@
       saved: '✔ Evidence saved!', waitOthers: 'Wait for the others ({n} ready).', erasing: 'EVIDENCE BEING ERASED', reconnect: 'Scan the QR on the screen with your camera, or type the code written under the QR.', code: 'CODE', saveProof: 'SAVE THE EVIDENCE',
       simonRound: 'Dose {a}/{b} · ', simonWatch: 'Watch the screen and memorise...', simonGo: 'Press when it is your colour!',
       roomsClue: 'Your clue', roomsNoClue: 'You have no clue: listen to the others.', roomsHelp: 'Vote for the room. You can change your vote until everyone has voted.', voted: 'Voted: {a}/{b}', yourVote: 'Your vote',
-      confirmed: '✔ Confirmed', ready: '{a}/{b} ready. Go!', vault: 'Enter the 3-digit code (vial 1, vial 2, vial 3). Everyone must confirm within 20 seconds of the first!'
+      confirmed: '✔ Confirmed', ready: '{a}/{b} ready. Go!', vault: 'Enter the 3-digit code (vial 1, vial 2, vial 3). Everyone must confirm within 20 seconds of the first!',
+      partyTitle: 'Vote for the games', partyHelp: 'For each game say whether you fancy it or not: the ranking on the screen updates live. You can change your mind any time.', yes: '👍 Yes', no: '👎 No', votedCount: 'You voted on {a} of {b} games.', partyWait: 'When the time comes, the game master will start the big game: keep this page open.'
     }
   };
   const T = (k, vars = {}) => { let s = (UI[lang || 'it'] || UI.it)[k] || k; for (const [a, b] of Object.entries(vars)) s = s.split('{' + a + '}').join(b); return s; };
 
+  $('langBtn').addEventListener('click', () => { const l = lang === 'en' ? 'it' : 'en'; setLang(l); if (S && S.me) send({ type: 'setLang', lang: l }); lastKey = ''; render(); });
   const ws = connect({
     hello: () => ({ role: 'phone', pid }),
     onOpen: () => { $('status').textContent = T('connected'); },
@@ -74,13 +77,20 @@
   // ---- viste
   const V = {
     lang: () => `<div class="join"><h2>${T('chooseLang')}</h2><div class="langs"><button data-lang="it">🇮🇹 Italiano</button><button data-lang="en">🇬🇧 English</button></div></div>`,
-    join: () => `<div class="join"><h2>${T('join')}</h2><p class="muted">${T('joinHelp')}</p>${input('name', T('yourName'), false)}<button id="joinBtn">${T('enter')}</button><button id="langBack" class="secondary" style="width:100%;margin-top:10px">${T('changeLang')}</button></div>`,
+    join: () => `<div class="join"><h2>${T('join')}</h2><p class="muted">${T('joinHelp')}</p>${input('name', T('yourName'), false)}<button id="joinBtn">${T('enter')}</button></div>`,
+    party: () => {
+      const v = S.me.votes || {};
+      const cats = S.gameCategories.length ? S.gameCategories : [{ id: '', name: '' }];
+      const list = cats.map((c) => { const gs = S.games.filter((g) => (g.category || '') === c.id); if (!gs.length) return ''; return `<div class="grp">${esc(c.name)}</div>` + gs.map((g) => `<div class="game card ${v[g.id] === true ? 'yes' : v[g.id] === false ? 'no' : ''}"><div class="gtitle">${esc(g.name)}</div><div class="gdesc muted">${esc(g.desc)}</div><div class="row vbtns"><button class="secondary vote ${v[g.id] === true ? 'on' : ''}" data-game="${g.id}" data-yes="1">${T('yes')}</button><button class="secondary vote ${v[g.id] === false ? 'on' : ''}" data-game="${g.id}" data-yes="0">${T('no')}</button></div></div>`).join(''); }).join('');
+      const nv = Object.keys(v).length;
+      return `<h2>${T('partyTitle')}</h2><p class="muted">${T('partyHelp')}</p><p class="ok-badge">${T('votedCount', { a: nv, b: S.games.length })}</p>${list}<p class="muted" style="text-align:center;margin-top:16px">${T('partyWait')}</p>`;
+    },
     lobby: () => {
       const done = S.me.profile && Object.keys(S.me.profile).length;
       const form = S.profileFields.map((f) => `<label class="muted" style="display:block;margin:10px 0 4px">${esc(f.label)}${f.required ? ' *' : ''}</label><input id="pf_${f.key}" placeholder="${esc(f.placeholder)}" autocomplete="off" value="${esc((S.me.profile || {})[f.key] || '')}">`).join('');
       return `<div class="bigmsg" style="padding:10px 0">${T('inside', { name: esc(S.me.name) })}<br><span style="color:${S.me.color}">${T('team', { team: esc(S.me.teamName) })}</span></div>
         <div class="card"><h2>${T('card')}</h2><p class="muted">${T('cardHelp')} ${done ? `<b class="ok-badge">${T('cardSaved')}</b> ${T('cardEdit')}` : T('cardRequired')}</p>${form}<button id="profBtn" style="width:100%;margin-top:14px">${done ? T('updateCard') : T('saveCard')}</button></div>
-        <p class="muted" style="text-align:center;margin-top:14px">${T('waitStart')}</p><button id="switchLang" class="secondary" style="width:100%">${T('changeLang')}</button>`;
+        <p class="muted" style="text-align:center;margin-top:14px">${T('waitStart')}</p>`;
     },
     intro: () => `<div class="bigmsg glitch" style="color:var(--bad)">${T('poisoned', { victim: esc(S.victim) })}</div><p class="muted" style="text-align:center">${T('lookScreen')} ${S.me.profile ? '' : T('noCard')}</p>${S.me.profile ? '' : `<button id="backLobby" class="secondary" style="width:100%">${T('fillCard')}</button>`}`,
     levelDone: () => `<div class="bigmsg" style="color:var(--ok)">${T('levelDone')}</div><p class="muted" style="text-align:center">${T('nextSoon')}</p>`,
@@ -114,7 +124,7 @@
   };
 
   function playScenes() {
-    if (!S || !S.me) return;
+    if (!S || !S.me || S.mode === 'party') return;
     const key = S.phase === 'intro' ? 'intro' : S.phase === 'dead' ? 'dead:' + S.levelIdx : S.phase === 'level' ? 'level:' + S.levelIdx : null;
     if (key && key !== seenScene) {
       seenScene = key;
@@ -129,14 +139,16 @@
   function render() {
     if (!S) return;
     playScenes();
-    $('lvl').textContent = S.level ? S.level.title : (S.phase === 'win' ? T('solved') : S.phase === 'dead' ? T('timeout') : T('terminal'));
+    $('lvl').textContent = S.mode === 'party' ? (lang === 'en' ? 'PARTY · GAMES' : 'FESTA · GIOCHI') : S.level ? S.level.title : (S.phase === 'win' ? T('solved') : S.phase === 'dead' ? T('timeout') : T('terminal'));
     $('me').textContent = S.me ? S.me.name : '';
     const t = $('team'); if (S.me) { t.style.display = ''; t.style.setProperty('--tc', S.me.color); t.textContent = S.me.teamName; } else t.style.display = 'none';
+    const lb = $('langBtn'); lb.classList.toggle('hidden', !lang); lb.textContent = lang === 'en' ? '🇮🇹' : '🇬🇧';
     const h = $('hint'); if (S.hint && S.hint.text && now() - S.hint.at < 90000) { h.classList.remove('hidden'); h.innerHTML = `<b>${T('hint')}:</b> ${esc(S.hint.text)}`; } else h.classList.add('hidden');
     if (S.toast && S.toast.at !== lastToastAt && S.toast.kind === 'good') { lastToastAt = S.toast.at; toast(S.toast.text, 'good'); }
 
     let view;
     if (!S.me) view = lang ? 'join' : 'lang';
+    else if (S.mode === 'party') view = 'party';
     else if (S.phase === 'lobby') view = 'lobby';
     else if (S.phase === 'intro') view = 'intro';
     else if (S.phase === 'levelDone') view = 'levelDone';
@@ -168,6 +180,7 @@
       case 'rooms': return [L.mine, L.myVote, L.voted, L.total];
       case 'vault': return [L.me, L.confirmed.length, L.total];
       case 'lobby': return [S.me && S.me.team, !!(S.me && S.me.profile), S.phase];
+      case 'party': return [S.me && S.me.votes, S.games.length];
       case 'intro': return [!!(S.me && S.me.profile)];
       default: return [S.me && S.me.team];
     }
@@ -178,7 +191,6 @@
     if (view === 'join') {
       const go = () => { const name = $('name').value.trim(); if (name) send({ type: 'join', name, pid, lang }); };
       on('joinBtn', 'click', go); on('name', 'keydown', (e) => { if (e.key === 'Enter') go(); }); $('name').focus();
-      on('langBack', 'click', () => { setLang(lang === 'en' ? 'it' : 'en'); lastKey = ''; render(); });
     }
     if (view === 'lobby') {
       on('profBtn', 'click', () => {
@@ -187,7 +199,9 @@
         if (missing) { toast(T('fillRequired'), 'bad'); return; }
         send({ type: 'profile', data }); forceLobby = false; toast(T('cardSavedToast'), 'good'); vibrate(60);
       });
-      on('switchLang', 'click', () => { const l = lang === 'en' ? 'it' : 'en'; setLang(l); send({ type: 'setLang', lang: l }); lastKey = ''; render(); });
+    }
+    if (view === 'party') {
+      document.querySelectorAll('.vote').forEach((b) => b.addEventListener('click', () => { const cur = (S.me.votes || {})[b.dataset.game]; const yes = b.dataset.yes === '1'; send({ type: 'vote', game: b.dataset.game, yes: cur === yes ? null : yes }); vibrate(25); }));
     }
     if (view === 'intro') on('backLobby', 'click', () => { forceLobby = true; lastKey = ''; render(); });
     if (view === 'sync') {

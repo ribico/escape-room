@@ -28,6 +28,26 @@
   const header = (t, sub, t2, sub2) => `<h1 class="title">${esc(t)}</h1>${t2 ? `<div class="title2">${esc(t2)}</div>` : ''}${sub ? `<p class="subtitle">${esc(sub)}</p>` : ''}${sub2 ? `<p class="subtitle alt">${esc(sub2)}</p>` : ''}`;
   const bi = (a, b, cls = 'subtitle') => `<p class="${cls}">${esc(a)}</p>${b && b !== a ? `<p class="${cls} alt">${esc(b)}</p>` : ''}`;
 
+  // ---- schermata "giochi della festa": QR Wi-Fi, QR registrazione, classifica dei voti
+  function partyHtml() {
+    const byId = Object.fromEntries(S.games.map((g) => [g.id, g]));
+    const a = alt(); const enNames = a.games ? Object.fromEntries(a.games.map((g) => [g.id, g.name])) : {};
+    const TOP = 10;
+    const rows = S.ranking.slice(0, TOP).map((r, i) => { const g = byId[r.id]; if (!g) return ''; const max = Math.max(1, S.ranking[0].yes); return `<div class="rank ${i < 3 && r.yes > 0 ? 'top' : ''}"><div class="pos">${i + 1}</div><div class="mid"><div class="gname">${esc(g.name)}${enNames[r.id] && enNames[r.id] !== g.name ? ` <small>${esc(enNames[r.id])}</small>` : ''}</div><div class="bar2"><div style="width:${(r.yes / max) * 100}%"></div></div></div><div class="yes">👍 ${r.yes}</div><div class="no">👎 ${r.no}</div></div>`; }).join('');
+    return `<div class="party">
+      <div class="pcol">
+        <h1 class="title" style="font-size:clamp(1.6rem,3.2vw,2.8rem)">Compleanno di ${esc(S.birthday.name)}</h1><div class="title2">${esc(S.birthday.name)}'s birthday party</div>
+        ${S.wifi && S.wifi.qr ? `<div class="qrbox"><div class="qrlabel">1 · Wi-Fi <b>${esc(S.wifi.ssid)}</b></div>${qr(S.wifi.qr)}<div class="muted small">inquadra per collegarti · scan to connect${S.wifi.password && !/INSERISCI/.test(S.wifi.password) ? ` · password: <span class="mono">${esc(S.wifi.password)}</span>` : ''}</div></div>` : ''}
+        <div class="qrbox"><div class="qrlabel">2 · Registrati e vota · Sign up and vote</div>${qr(S.joinUrl)}<div class="url small">${esc(S.joinUrl)}</div></div>
+      </div>
+      <div class="pcol wide">
+        <h2 class="rankh">I 10 giochi più votati <span class="muted">· Top 10 games</span></h2>
+        <p class="muted mono">${S.voters} ${S.voters === 1 ? 'persona ha votato' : 'persone hanno votato'} · ${S.players.length} iscritte</p>
+        <div class="ranklist">${rows}</div>${S.ranking.length > TOP ? `<p class="muted small">Top ${TOP} di ${S.ranking.length} giochi · top ${TOP} of ${S.ranking.length} games</p>` : ''}
+      </div>
+    </div>`;
+  }
+
   // ---- rendering per fase/livello
   const R = {
     lobby: () => `${header(`Compleanno di ${S.birthday.name}`, 'Inquadra il QR con la fotocamera del telefono, scegli la lingua, scrivi il tuo nome e compila la tua scheda riservata.', `${S.birthday.name}'s birthday`, 'Scan the QR with your phone camera, choose your language, type your name and fill in your private card.')}${qr(S.joinUrl)}<div class="url">${esc(S.joinUrl)}</div><p class="muted mono">Schede compilate / cards filled in: ${S.profilesDone}/${S.players.length}</p>${teamsHtml((p) => false)}`,
@@ -66,9 +86,10 @@
     const conn = S.players.filter((p) => p.connected).length;
     $('playersMini').textContent = S.players.length ? `${conn}/${S.players.length} connesse` : '';
     const lvl = S.level;
-    $('lvlLabel').textContent = lvl ? lvl.title : (S.phase === 'win' ? 'CASO RISOLTO · CASE SOLVED' : S.phase === 'dead' ? 'TEMPO SCADUTO · TIME IS UP' : 'INDAGINE IN CORSO · INVESTIGATION');
+    $('lvlLabel').textContent = S.mode === 'party' ? 'FESTA · PARTY' : lvl ? lvl.title : (S.phase === 'win' ? 'CASO RISOLTO · CASE SOLVED' : S.phase === 'dead' ? 'TEMPO SCADUTO · TIME IS UP' : 'INDAGINE IN CORSO · INVESTIGATION');
     let html = '';
-    if (S.phase === 'lobby') html = R.lobby();
+    if (S.mode === 'party') html = partyHtml();
+    else if (S.phase === 'lobby') html = R.lobby();
     else if (S.phase === 'intro') html = R.intro();
     else if (S.phase === 'win') html = R.win();
     else if (S.phase === 'dead') html = R.dead();
@@ -79,7 +100,7 @@
         + R[lvl.id]();
     }
     $('main').innerHTML = html;
-    $('overlay').classList.toggle('hidden', S.phase !== 'levelDone');
+    $('overlay').classList.toggle('hidden', S.phase !== 'levelDone' || S.mode === 'party');
     if (S.phase === 'levelDone') $('overlay').innerHTML = 'ATTO SUPERATO<br><span style="font-size:.5em">ACT COMPLETE</span>';
     // effetti al cambio di fase
     const key = S.phase + ':' + S.levelIdx;
@@ -96,6 +117,7 @@
   function tickTimer() {
     if (!S) return;
     const el = $('timer');
+    if (S.mode === 'party') { el.textContent = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }); el.classList.remove('warn'); return; }
     if (!S.deadline) { el.textContent = mmss((S.deadline ? 0 : 60 * 60000)); el.classList.remove('warn'); return; }
     const left = S.phase === 'win' ? S.deadline - S.finishedAt : S.deadline - now();
     el.textContent = mmss(left); el.classList.toggle('warn', left < 5 * 60000 && S.phase !== 'win');
